@@ -12,17 +12,19 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="bg-white border-b border-gray-300 sticky top-0 z-50 transition-all">
-      <div className="max-w-7xl mx-auto px-6 md:px-16 lg:px-24 py-4 flex items-center justify-between">
+    <nav className="bg-transparent absolute w-full  z-50 transition-all">
+      <div className="max-w-8xl mx-auto px-6 md:px-16 lg:px-24 py-4 flex items-center justify-between">
         
-        {/* Logo */}
-        <a href="https://prebuiltui.com" className="flex-shrink-0">
+        <div className=''>
+        <a href="" className="shrink-0 flex items-center justify-center text-[#274760] gap-2">
           <img 
             className="h-9" 
-            src="https://raw.githubusercontent.com/prebuiltui/prebuiltui/main/assets/dummyLogo/dummyLogoColored.svg" 
+            src="" 
             alt="Logo" 
-          />
+            />
+            <h1 className='text-3xl'>ProHealth</h1>
         </a>
+            </div>
 
         {/* Desktop Menu */}
         <div className="hidden lg:flex items-center gap-8 text-[#274760] font-medium">

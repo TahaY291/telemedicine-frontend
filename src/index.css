@@ -1,1 +1,6 @@
 @import "tailwindcss";
+
+.hero-bg-clr{
+  background: #D2E8F2;
+background: linear-gradient(-193deg, rgba(210, 232, 242, 1) 0%, rgba(169, 207, 244, 1) 50%, rgba(153, 197, 242, 1) 100%);
+}

@@ -6,9 +6,9 @@ import Footer from "../components/shared/Footer";
 
 const PublicLayout = () => {
     return (
-        <div className="min-h-screen flex flex-col">
+        <div className="min-h-screen flex flex-col relative">
             <Navbar />
-            <main className="flex-grow">
+            <main className="grow">
                 <Outlet />
             </main>
             <Footer />
