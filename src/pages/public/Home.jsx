@@ -7,6 +7,7 @@ import General_physician from '/src/assets/assets_frontend/General_physician.svg
 import Gynecologist from '/src/assets/assets_frontend/Gynecologist.svg'
 import Dermatologist from '/src/assets/assets_frontend/Dermatologist.svg'
 import AppointmentBanner from '../../components/shared/AppointmentBanner'
+import Banner from '../../components/shared/Banner'
 
 const Home = () => {
     const specialities = [
@@ -60,7 +61,7 @@ const Home = () => {
                 {/* we wil show doctors here */}
             </div>
 
-            <AppointmentBanner/>
+            <Banner/>
             
         </div>
     )
