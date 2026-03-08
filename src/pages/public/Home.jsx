@@ -37,7 +37,7 @@ const Home = () => {
                     </p>
 
                     {/* Icons Section */}
-                    <div className="mt-14 flex items-center justify-center gap-3">
+                    <div className="mt-14 flex items-center flex-wrap justify-center gap-3">
                         {specialities.map((item, index) => (
                             <div key={index} className="flex flex-col items-center">
                                 <div className="w-28 h-28 rounded-full bg-[#dbe3ea] flex items-center justify-center">
