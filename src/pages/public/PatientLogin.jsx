@@ -3,9 +3,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useContext } from 'react';
 import { AppContext } from '../../context/Context.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
 
 const PatientAuth = ({ mode = 'login' }) => {
-  const { role } = useContext(AppContext);
+  const { role  } = useContext(AppContext);
+  const { setUser  } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ username: '', email: '', password: '' });
   const [loading, setLoading] = useState(false);
@@ -20,7 +22,7 @@ const PatientAuth = ({ mode = 'login' }) => {
     e.preventDefault();
     setLoading(true);
 
-    const endpoint = mode === 'login' ? '/api/v1/users/login' : '/api/v1/users/register';
+    const endpoint = mode === 'login' ? '/users/login' : '/users/register';
 
     const payload =
       mode === 'login'
@@ -38,15 +40,22 @@ const PatientAuth = ({ mode = 'login' }) => {
           }
         }
       );
-
+      
       setMessage({ type: 'success', text: data.message });
-
+      console.log("Auth response:", data.data.user.role);
+      console.log("Auth response:", data.message);
+      
+      if (mode === 'login') {
+        setUser(data.data.user);
+      }
+      
+      
       if (mode === 'signup') {
         setTimeout(() => navigate('/verify-email'), 2000);
       } else {
-        setTimeout(() => navigate('/patient-dashboard'), 1500);
+        setTimeout(() => navigate(`/${data.data.user.role}`), 1500);
       }
-
+      
     } catch (err) {
       setMessage({
         type: 'error',
