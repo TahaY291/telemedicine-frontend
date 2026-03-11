@@ -15,7 +15,18 @@ import PatientAppointments from "../pages/patient/PatientAppointments.jsx";
 import PatientProfile from "../pages/patient/PatientProfile.jsx";
 
 const PatientProtectedRoute = () => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="flex items-center gap-3 text-[#274760]">
+          <span className="w-5 h-5 border-2 border-[#274760]/30 border-t-[#274760] rounded-full animate-spin" />
+          <span className="text-sm font-medium">Checking your session...</span>
+        </div>
+      </div>
+    );
+  }
 
   if (!user || user.role !== "patient") {
     return <Navigate to="/patient-login" replace />;

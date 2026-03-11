@@ -41,7 +41,7 @@ const PatientSidebar = () => {
 
   return (
     <div
-      className="relative flex flex-col min-h-screen w-16 md:w-64 px-2 md:px-4 py-7 overflow-hidden shadow-xl transition-all duration-300"
+      className="relative flex flex-col h-screen w-16 md:w-64 px-2 md:px-4 py-7 overflow-hidden shadow-xl transition-all duration-300 flex-shrink-0"
       style={{
         background: "linear-gradient(-193deg, rgba(210,232,242,1) 0%, rgba(169,207,244,1) 50%, rgba(153,197,242,1) 100%)",
       }}
