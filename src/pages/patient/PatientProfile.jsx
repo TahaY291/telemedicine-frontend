@@ -1,9 +1,649 @@
-import React from 'react'
+import React, { useEffect, useMemo, useState } from "react";
+import api from "../../api/axios.js";
+import { useAuth } from "../../context/AuthContext.jsx";
+import {
+  FiEdit2, FiRefreshCw, FiSave, FiUser, FiUpload,
+  FiPhone, FiMapPin, FiActivity, FiAlertCircle, FiCheck, FiX
+} from "react-icons/fi";
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const TABS = ["Personal", "Medical", "Emergency"];
+
+const emptyForm = {
+  phoneNumber: "", dob: "", gender: "", city: "", street: "",
+  bloodGroup: "", allergies: "", chronicDiseases: "", medications: "",
+  medicalNotes: "", emergencyContactName: "", emergencyContactPhone: "",
+  emergencyRelation: "",
+};
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const isoFromDateInput = (v) => {
+  if (!v) return undefined;
+  const d = new Date(`${v}T00:00:00.000Z`);
+  return Number.isNaN(d.getTime()) ? undefined : d.toISOString();
+};
+
+const dateInputFromAny = (v) => {
+  if (!v) return "";
+  const d = new Date(v);
+  return Number.isNaN(d.getTime()) ? "" : d.toISOString().slice(0, 10);
+};
+
+const safeJoin = (arr) => (Array.isArray(arr) ? arr.filter(Boolean).join(", ") : "");
+const splitList = (v) => (v ? v.split(",").map((s) => s.trim()).filter(Boolean) : []);
+
+const formatDate = (v) => {
+  if (!v) return "—";
+  const d = new Date(v);
+  return Number.isNaN(d.getTime()) ? "—" : d.toLocaleDateString("en-PK", { day: "numeric", month: "short", year: "numeric" });
+};
+
+// ─── Tiny atoms ───────────────────────────────────────────────────────────────
+
+const inputCls =
+  "w-full px-3.5 py-2.5 rounded-lg border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#274760]/30 focus:border-[#274760] disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed transition-all";
+
+const Field = ({ label, hint, children, span2 = false }) => (
+  <div className={span2 ? "col-span-2" : ""}>
+    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
+      {label}{hint && <span className="normal-case font-normal text-slate-400 ml-1">{hint}</span>}
+    </label>
+    {children}
+  </div>
+);
+
+const InfoRow = ({ icon: Icon, label, value }) => (
+  <div className="flex items-start gap-3 py-3.5 border-b border-slate-100 last:border-0">
+    <div className="w-8 h-8 rounded-lg bg-[#274760]/8 flex items-center justify-center shrink-0 mt-0.5">
+      <Icon size={14} className="text-[#274760]" />
+    </div>
+    <div className="min-w-0 flex-1">
+      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{label}</p>
+      <p className="text-[15px] font-semibold text-slate-800 mt-1 break-words leading-snug">
+        {value || <span className="text-slate-300 font-normal text-sm">Not provided</span>}
+      </p>
+    </div>
+  </div>
+);
+
+const Tag = ({ children, color = "blue" }) => {
+  const colors = {
+    blue:  "bg-[#274760]/8 text-[#274760] border-[#274760]/15",
+    red:   "bg-red-50 text-red-700 border-red-100",
+    amber: "bg-amber-50 text-amber-700 border-amber-100",
+    green: "bg-emerald-50 text-emerald-700 border-emerald-100",
+  };
+  return (
+    <span className={`inline-block px-3 py-1.5 rounded-lg border text-xs font-bold mr-1.5 mb-1.5 ${colors[color]}`}>
+      {children}
+    </span>
+  );
+};
+
+// ─── Main ─────────────────────────────────────────────────────────────────────
 
 const PatientProfile = () => {
-  return (
-    <div>PatientProfile</div>
-  )
-}
+  const { user, setUser } = useAuth();
 
-export default PatientProfile
+  const [profile, setProfile]               = useState(null);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [saving, setSaving]                 = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [editing, setEditing]               = useState(false);
+  const [activeTab, setActiveTab]           = useState(0);
+  const [message, setMessage]               = useState({ type: "", text: "" });
+  const [form, setForm]                     = useState(emptyForm);
+  const [imagePreview, setImagePreview]     = useState(null);
+
+  const isNew       = !profile?._id;
+  const formEnabled = editing || isNew;
+
+  const headlineName = useMemo(
+    () => profile?.user?.username || user?.username || "Patient",
+    [profile?.user?.username, user?.username]
+  );
+
+  const avatarSrc =
+    imagePreview ||
+    profile?.profileImage ||
+    profile?.personalInfo?.profileImage ||
+    null;
+
+  const initials = (headlineName || "P")
+    .split(" ").filter(Boolean).slice(0, 2)
+    .map((s) => s[0]?.toUpperCase()).join("");
+
+  // ── Fetch ──────────────────────────────────────────────────────────────────
+
+  const hydrateForm = (p) => setForm({
+    phoneNumber:           p?.phoneNumber || "",
+    dob:                   dateInputFromAny(p?.personalInfo?.dob),
+    gender:                p?.personalInfo?.gender || "",
+    city:                  p?.personalInfo?.address?.city || "",
+    street:                p?.personalInfo?.address?.street || "",
+    bloodGroup:            p?.medicalInfo?.bloodGroup || "",
+    allergies:             safeJoin(p?.medicalInfo?.allergies),
+    chronicDiseases:       safeJoin(p?.medicalInfo?.chronicDiseases),
+    medications:           safeJoin(p?.medicalInfo?.medications),
+    medicalNotes:          p?.medicalInfo?.medicalNotes || "",
+    emergencyContactName:  p?.emergencyInfo?.contactName || "",
+    emergencyContactPhone: p?.emergencyInfo?.contactPhone || "",
+    emergencyRelation:     p?.emergencyInfo?.relation || "",
+  });
+
+  const fetchProfile = async () => {
+    setMessage({ type: "", text: "" });
+    setInitialLoading(true);
+    try {
+      if (!user) {
+        const r = await api.post("/users/is-authenticated");
+        const u = r?.data?.data?.user;
+        if (u) setUser(u);
+      }
+      const { data } = await api.get("/patients/patient-profile/me");
+      const p = data?.data;
+      hydrateForm(p);
+      setProfile(p || null);
+      setEditing(false);
+      setImagePreview(null);
+    } catch (err) {
+      if (err?.response?.status === 404) {
+        setProfile(null);
+        setEditing(true);
+        setMessage({ type: "info", text: err?.response?.data?.message || "No profile found. Please complete your setup." });
+      } else {
+        setMessage({ type: "error", text: err?.response?.data?.message || "Failed to load profile." });
+      }
+    } finally {
+      setInitialLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchProfile(); }, []); // eslint-disable-line
+
+  // ── Handlers ───────────────────────────────────────────────────────────────
+
+  const onChange = (e) => {
+    const { name, value } = e.target;
+    setForm((p) => ({ ...p, [name]: value }));
+    if (message.text) setMessage({ type: "", text: "" });
+  };
+
+  const onImageChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+    if (isNew) {
+      setMessage({ type: "info", text: "Save your profile first, then you can add a photo." });
+      return;
+    }
+    setUploadingImage(true);
+    setImagePreview(URL.createObjectURL(file));
+    setMessage({ type: "", text: "" });
+    try {
+      const fd = new FormData();
+      fd.append("profileImage", file);
+      const { data } = await api.patch("/patients/patient-profile/avatar", fd, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      if (data?.data) setProfile(data.data);
+      setImagePreview(null);
+      setMessage({ type: "success", text: data?.message || "Profile photo updated." });
+    } catch (err) {
+      setMessage({ type: "error", text: err?.response?.data?.message || "Failed to upload photo." });
+      setImagePreview(null);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const cancelEdit = () => {
+    hydrateForm(profile);
+    setEditing(false);
+    setImagePreview(null);
+    setMessage({ type: "", text: "" });
+  };
+
+  const buildJsonPayload = () => {
+    const payload = {};
+    if (form.phoneNumber?.trim()) payload.phoneNumber = form.phoneNumber.trim();
+
+    const pi = {};
+    const dob = isoFromDateInput(form.dob);
+    if (dob) pi.dob = dob;
+    if (form.gender) pi.gender = form.gender;
+    const addr = {};
+    if (form.city?.trim())   addr.city   = form.city.trim();
+    if (form.street?.trim()) addr.street = form.street.trim();
+    if (Object.keys(addr).length) pi.address = addr;
+    if (Object.keys(pi).length) payload.personalInfo = pi;
+
+    const mi = {};
+    if (form.bloodGroup) mi.bloodGroup = form.bloodGroup;
+    const al = splitList(form.allergies);
+    const ch = splitList(form.chronicDiseases);
+    const md = splitList(form.medications);
+    if (al.length) mi.allergies = al;
+    if (ch.length) mi.chronicDiseases = ch;
+    if (md.length) mi.medications = md;
+    if (form.medicalNotes?.trim()) mi.medicalNotes = form.medicalNotes.trim();
+    if (Object.keys(mi).length) payload.medicalInfo = mi;
+
+    const ei = {};
+    if (form.emergencyContactName?.trim())  ei.contactName  = form.emergencyContactName.trim();
+    if (form.emergencyContactPhone?.trim()) ei.contactPhone = form.emergencyContactPhone.trim();
+    if (form.emergencyRelation?.trim())     ei.relation     = form.emergencyRelation.trim();
+    if (Object.keys(ei).length) payload.emergencyInfo = ei;
+
+    return payload;
+  };
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    const payload = buildJsonPayload();
+    if (!Object.keys(payload).length) {
+      setMessage({ type: "error", text: "Please fill at least one field before saving." });
+      return;
+    }
+    setSaving(true);
+    setMessage({ type: "", text: "" });
+    try {
+      const { data } = isNew
+        ? await api.post("/patients/patient-profile", payload, { headers: { "Content-Type": "application/json" } })
+        : await api.patch("/patients/patient-profile", payload, { headers: { "Content-Type": "application/json" } });
+      setProfile(data?.data || null);
+      setEditing(false);
+      setImagePreview(null);
+      setMessage({ type: "success", text: data?.message || (isNew ? "Profile created." : "Profile updated.") });
+    } catch (err) {
+      setMessage({ type: "error", text: err?.response?.data?.message || "Failed to save profile." });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // ── Render ─────────────────────────────────────────────────────────────────
+
+  const allergiesList  = profile?.medicalInfo?.allergies?.filter(Boolean) || [];
+  const chronicList    = profile?.medicalInfo?.chronicDiseases?.filter(Boolean) || [];
+  const medicationList = profile?.medicalInfo?.medications?.filter(Boolean) || [];
+
+  return (
+    <div className="max-w-4xl mx-auto px-4 py-6 font-[system-ui]">
+
+      {/* ── Page title row ── */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800 tracking-tight">My Profile</h1>
+          <p className="text-sm text-slate-400 mt-0.5">Manage your health & contact information</p>
+        </div>
+        <button
+          onClick={fetchProfile}
+          disabled={initialLoading || saving}
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-500 text-sm font-medium hover:bg-slate-50 disabled:opacity-50 transition-colors"
+        >
+          <FiRefreshCw size={13} className={initialLoading ? "animate-spin" : ""} />
+          Refresh
+        </button>
+      </div>
+
+      {/* ── Toast ── */}
+      {message.text && (
+        <div className={[
+          "mb-5 flex items-start gap-3 px-4 py-3 rounded-xl border text-sm font-medium",
+          message.type === "success" ? "bg-emerald-50 border-emerald-100 text-emerald-700" : "",
+          message.type === "error"   ? "bg-red-50 border-red-100 text-red-700"             : "",
+          message.type === "info"    ? "bg-blue-50 border-blue-100 text-blue-700"           : "",
+        ].join(" ")}>
+          {message.type === "success" && <FiCheck size={16} className="mt-0.5 shrink-0" />}
+          {message.type === "error"   && <FiAlertCircle size={16} className="mt-0.5 shrink-0" />}
+          <span>{message.text}</span>
+        </div>
+      )}
+
+      {/* ── Loading ── */}
+      {initialLoading ? (
+        <div className="rounded-2xl border border-slate-200 bg-white p-10 flex items-center justify-center gap-3">
+          <div className="w-5 h-5 rounded-full border-2 border-slate-200 border-t-[#274760] animate-spin" />
+          <p className="text-sm text-slate-500 font-medium">Loading your profile…</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+
+          {/* ══════════════════════════════════════════════════
+              HERO CARD — avatar + name + quick stats + actions
+          ══════════════════════════════════════════════════ */}
+          <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+            {/* Teal accent bar */}
+            <div className="h-1.5 bg-gradient-to-r from-[#274760] to-[#3a6b8f]" />
+
+            <div className="p-6 flex flex-col sm:flex-row sm:items-center gap-5">
+
+              {/* Avatar */}
+              <div className="relative w-20 h-20 rounded-2xl shrink-0 overflow-hidden bg-[#274760]/8 shadow-sm">
+                {avatarSrc ? (
+                  <img src={avatarSrc} alt={headlineName} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-[#274760] font-bold text-2xl">
+                    {initials}
+                  </div>
+                )}
+                {uploadingImage && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                    <span className="w-5 h-5 border-2 border-white/60 border-t-white rounded-full animate-spin" />
+                  </div>
+                )}
+                {!isNew && !uploadingImage && (
+                  <label className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 opacity-0 hover:opacity-100 cursor-pointer transition-opacity">
+                    <FiUpload size={16} className="text-white" />
+                    <span className="text-white text-[10px] font-semibold mt-1">Change</span>
+                    <input type="file" accept="image/*" className="hidden" onChange={onImageChange} />
+                  </label>
+                )}
+              </div>
+
+              {/* Name + meta */}
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="text-xl font-bold text-slate-800">{headlineName}</h2>
+                  {profile?.personalInfo?.gender && (
+                    <span className="px-2.5 py-0.5 rounded-full bg-[#274760]/8 text-[#274760] text-xs font-semibold capitalize">
+                      {profile.personalInfo.gender}
+                    </span>
+                  )}
+                  {profile?.medicalInfo?.bloodGroup && (
+                    <span className="px-2.5 py-0.5 rounded-full bg-red-50 text-red-600 text-xs font-bold border border-red-100">
+                      {profile.medicalInfo.bloodGroup}
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm text-slate-400 mt-0.5 truncate">
+                  {profile?.user?.email || user?.email || "—"}
+                </p>
+
+                {/* Quick info pills */}
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {profile?.phoneNumber && (
+                    <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg">
+                      <FiPhone size={12} className="text-slate-400" /> {profile.phoneNumber}
+                    </span>
+                  )}
+                  {(profile?.personalInfo?.address?.city || profile?.personalInfo?.address?.street) && (
+                    <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg">
+                      <FiMapPin size={12} className="text-slate-400" />
+                      {[profile.personalInfo.address.city, profile.personalInfo.address.street].filter(Boolean).join(", ")}
+                    </span>
+                  )}
+                  {profile?.personalInfo?.dob && (
+                    <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg">
+                      <FiUser size={12} className="text-slate-400" /> {formatDate(profile.personalInfo.dob)}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex items-center gap-2 shrink-0">
+                {!isNew && (
+                  editing ? (
+                    <button
+                      onClick={cancelEdit}
+                      disabled={saving}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-600 text-sm font-semibold hover:bg-slate-50 disabled:opacity-50 transition-colors"
+                    >
+                      <FiX size={14} /> Cancel
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setEditing(true)}
+                      disabled={initialLoading || saving}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#274760] text-white text-sm font-semibold hover:bg-[#1e364a] disabled:opacity-50 transition-colors"
+                    >
+                      <FiEdit2 size={14} /> Edit Profile
+                    </button>
+                  )
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* ══════════════════════════════════════════════════
+              MAIN AREA — view mode OR edit form
+          ══════════════════════════════════════════════════ */}
+
+          {formEnabled ? (
+            /* ── EDIT / CREATE FORM ── */
+            <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+
+              {/* Tab bar */}
+              <div className="flex border-b border-slate-100 bg-slate-50/60">
+                {TABS.map((tab, i) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(i)}
+                    className={[
+                      "flex-1 py-3.5 text-sm font-semibold transition-colors relative",
+                      activeTab === i
+                        ? "text-[#274760] bg-white border-b-2 border-[#274760]"
+                        : "text-slate-400 hover:text-slate-600",
+                    ].join(" ")}
+                  >
+                    {tab}
+                  </button>
+                ))}
+              </div>
+
+              <form onSubmit={handleSave}>
+                <div className="p-6">
+
+                  {/* Tab 0: Personal */}
+                  {activeTab === 0 && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <Field label="Phone Number" hint="10–15 digits" span2>
+                        <input name="phoneNumber" value={form.phoneNumber} onChange={onChange}
+                          placeholder="e.g. 03001234567" className={inputCls} />
+                      </Field>
+                      <Field label="Date of Birth">
+                        <input type="date" name="dob" value={form.dob} onChange={onChange} className={inputCls} />
+                      </Field>
+                      <Field label="Gender">
+                        <select name="gender" value={form.gender} onChange={onChange} className={inputCls}>
+                          <option value="">Select gender</option>
+                          <option value="male">Male</option>
+                          <option value="female">Female</option>
+                          <option value="other">Other</option>
+                          <option value="prefer not to say">Prefer not to say</option>
+                        </select>
+                      </Field>
+                      <Field label="City">
+                        <input name="city" value={form.city} onChange={onChange}
+                          placeholder="e.g. Lahore" className={inputCls} />
+                      </Field>
+                      <Field label="Street">
+                        <input name="street" value={form.street} onChange={onChange}
+                          placeholder="e.g. Street 12, Block B" className={inputCls} />
+                      </Field>
+                    </div>
+                  )}
+
+                  {/* Tab 1: Medical */}
+                  {activeTab === 1 && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <Field label="Blood Group">
+                        <select name="bloodGroup" value={form.bloodGroup} onChange={onChange} className={inputCls}>
+                          <option value="">Select blood group</option>
+                          {["A+","A-","B+","B-","AB+","AB-","O+","O-"].map((bg) => (
+                            <option key={bg} value={bg}>{bg}</option>
+                          ))}
+                        </select>
+                      </Field>
+                      <Field label="Allergies" hint="(comma separated)">
+                        <input name="allergies" value={form.allergies} onChange={onChange}
+                          placeholder="e.g. peanuts, penicillin" className={inputCls} />
+                      </Field>
+                      <Field label="Chronic Diseases" hint="(comma separated)">
+                        <input name="chronicDiseases" value={form.chronicDiseases} onChange={onChange}
+                          placeholder="e.g. diabetes, hypertension" className={inputCls} />
+                      </Field>
+                      <Field label="Medications" hint="(comma separated)">
+                        <input name="medications" value={form.medications} onChange={onChange}
+                          placeholder="e.g. metformin, aspirin" className={inputCls} />
+                      </Field>
+                      <Field label="Medical Notes" span2>
+                        <textarea name="medicalNotes" value={form.medicalNotes} onChange={onChange}
+                          rows={3} placeholder="Any other important notes for your doctor."
+                          className={`${inputCls} resize-none`} />
+                      </Field>
+                    </div>
+                  )}
+
+                  {/* Tab 2: Emergency */}
+                  {activeTab === 2 && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <Field label="Contact Name">
+                        <input name="emergencyContactName" value={form.emergencyContactName} onChange={onChange}
+                          placeholder="e.g. Ali Khan" className={inputCls} />
+                      </Field>
+                      <Field label="Relationship">
+                        <input name="emergencyRelation" value={form.emergencyRelation} onChange={onChange}
+                          placeholder="e.g. Father" className={inputCls} />
+                      </Field>
+                      <Field label="Contact Phone" span2>
+                        <input name="emergencyContactPhone" value={form.emergencyContactPhone} onChange={onChange}
+                          placeholder="e.g. 03001234567" className={inputCls} />
+                      </Field>
+                      <div className="col-span-2 rounded-xl bg-amber-50 border border-amber-100 px-4 py-3">
+                        <p className="text-xs text-amber-700 font-medium flex items-center gap-2">
+                          <FiAlertCircle size={13} />
+                          This person will be contacted in case of a medical emergency.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Form footer */}
+                <div className="px-6 pb-6 flex items-center justify-between gap-3 pt-2 border-t border-slate-100">
+                  {/* Tab navigation */}
+                  <div className="flex gap-2">
+                    {activeTab > 0 && (
+                      <button type="button" onClick={() => setActiveTab(activeTab - 1)}
+                        className="px-3.5 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 transition-colors">
+                        ← Back
+                      </button>
+                    )}
+                    {activeTab < TABS.length - 1 && (
+                      <button type="button" onClick={() => setActiveTab(activeTab + 1)}
+                        className="px-3.5 py-2 rounded-lg border border-[#274760] text-[#274760] text-sm font-medium hover:bg-[#274760]/5 transition-colors">
+                        Next →
+                      </button>
+                    )}
+                  </div>
+
+                  <button type="submit" disabled={saving}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#274760] text-white text-sm font-semibold hover:bg-[#1e364a] disabled:opacity-60 transition-colors">
+                    {saving ? (
+                      <><span className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin" /> Saving…</>
+                    ) : (
+                      <><FiSave size={14} /> {isNew ? "Create Profile" : "Save Changes"}</>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+          ) : (
+            /* ── VIEW MODE — 3-card grid ── */
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+              {/* Personal */}
+              <div className="rounded-2xl border border-slate-200 bg-white p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-8 h-8 rounded-lg bg-[#274760]/10 flex items-center justify-center">
+                    <FiUser size={14} className="text-[#274760]" />
+                  </div>
+                  <h3 className="text-base font-bold text-slate-800">Personal</h3>
+                </div>
+                <InfoRow icon={FiPhone}   label="Phone"  value={profile?.phoneNumber} />
+                <InfoRow icon={FiUser}    label="Gender" value={profile?.personalInfo?.gender} />
+                <InfoRow icon={FiUser}    label="DOB"    value={formatDate(profile?.personalInfo?.dob)} />
+                <InfoRow icon={FiMapPin}  label="City"   value={profile?.personalInfo?.address?.city} />
+                <InfoRow icon={FiMapPin}  label="Street" value={profile?.personalInfo?.address?.street} />
+              </div>
+
+              {/* Medical */}
+              <div className="rounded-2xl border border-slate-200 bg-white p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center">
+                    <FiActivity size={14} className="text-red-500" />
+                  </div>
+                  <h3 className="text-base font-bold text-slate-800">Medical</h3>
+                  {profile?.medicalInfo?.bloodGroup && (
+                    <span className="ml-auto px-2 py-0.5 rounded-full bg-red-50 text-red-600 text-xs font-bold border border-red-100">
+                      {profile.medicalInfo.bloodGroup}
+                    </span>
+                  )}
+                </div>
+
+                {allergiesList.length > 0 && (
+                  <div className="mb-3">
+                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Allergies</p>
+                    <div>{allergiesList.map((a) => <Tag key={a} color="red">{a}</Tag>)}</div>
+                  </div>
+                )}
+                {chronicList.length > 0 && (
+                  <div className="mb-3">
+                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Chronic Diseases</p>
+                    <div>{chronicList.map((c) => <Tag key={c} color="amber">{c}</Tag>)}</div>
+                  </div>
+                )}
+                {medicationList.length > 0 && (
+                  <div className="mb-3">
+                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Medications</p>
+                    <div>{medicationList.map((m) => <Tag key={m} color="green">{m}</Tag>)}</div>
+                  </div>
+                )}
+                {profile?.medicalInfo?.medicalNotes && (
+                  <div className="mt-2 rounded-lg bg-slate-50 border border-slate-100 px-3 py-2.5">
+                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1">Notes</p>
+                    <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed font-medium">
+                      {profile.medicalInfo.medicalNotes}
+                    </p>
+                  </div>
+                )}
+                {!profile?.medicalInfo && (
+                  <p className="text-sm text-slate-400 italic">No medical info added yet.</p>
+                )}
+              </div>
+
+              {/* Emergency */}
+              <div className="rounded-2xl border border-slate-200 bg-white p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
+                    <FiAlertCircle size={14} className="text-amber-500" />
+                  </div>
+                  <h3 className="text-base font-bold text-slate-800">Emergency Contact</h3>
+                </div>
+                {profile?.emergencyInfo?.contactName ? (
+                  <>
+                    <InfoRow icon={FiUser}  label="Name"         value={profile.emergencyInfo.contactName} />
+                    <InfoRow icon={FiUser}  label="Relationship" value={profile.emergencyInfo.relation} />
+                    <InfoRow icon={FiPhone} label="Phone"        value={profile.emergencyInfo.contactPhone} />
+                  </>
+                ) : (
+                  <p className="text-sm text-slate-400 italic">No emergency contact added.</p>
+                )}
+              </div>
+
+            </div>
+          )}
+
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default PatientProfile;

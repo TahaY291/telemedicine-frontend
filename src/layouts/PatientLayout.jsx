@@ -5,11 +5,11 @@ import PatientNavbar from "../components/patientComponent/PatientNavbar";
 
 const PatientLayout = () => {
     return (
-        <div className="flex min-h-screen bg-gray-50">
+        <div className="flex h-screen bg-gray-50 overflow-hidden">
             <PatientSidebar />
-            <div className="flex flex-col flex-1">
+            <div className="flex flex-col flex-1 h-screen overflow-hidden">
                 <PatientNavbar />
-                <main className="p-6 flex-1">
+                <main className="p-6 flex-1 overflow-y-auto">
                     <Outlet />
                 </main>
             </div>
