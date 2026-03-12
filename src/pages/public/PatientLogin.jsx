@@ -5,13 +5,15 @@ import { useContext } from 'react';
 import { AppContext } from '../../context/Context.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 
-const PatientAuth = ({ mode = 'login' }) => {
-  const { role  } = useContext(AppContext);
+const PatientAuth = ({ mode = 'login', forcedRole }) => {
+  const { role } = useContext(AppContext);
   const { setUser  } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ username: '', email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+
+  const accountRole = forcedRole || role || 'patient';
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -27,7 +29,7 @@ const PatientAuth = ({ mode = 'login' }) => {
     const payload =
       mode === 'login'
         ? { email: formData.email, password: formData.password }
-        : { ...formData, role: 'patient' };
+        : { ...formData, role: accountRole };
 
     try {
       const { data } = await axios.post(
@@ -51,7 +53,8 @@ const PatientAuth = ({ mode = 'login' }) => {
       
       
       if (mode === 'signup') {
-        setTimeout(() => navigate('/verify-email'), 2000);
+        const loginPath = accountRole === 'doctor' ? '/doctor-login' : '/patient-login';
+        setTimeout(() => navigate(loginPath), 1500);
       } else {
         setTimeout(() => navigate(`/${data.data.user.role}`), 1500);
       }
@@ -71,7 +74,7 @@ const PatientAuth = ({ mode = 'login' }) => {
       <div className="max-w-md w-full bg-white p-8 rounded-2xl shadow-sm border border-gray-200">
         <div className="text-center mb-8">
           <h2 className="text-2xl font-bold text-[#274760]">
-            {role === 'doctor' ? 'Doctor' : 'Patient'} {mode === 'login' ? 'Login' : 'Account Creation'}
+            {accountRole === 'doctor' ? 'Doctor' : 'Patient'} {mode === 'login' ? 'Login' : 'Account Creation'}
           </h2>
           <p className="text-gray-500 text-sm mt-2">
             {mode === 'login' ? 'Access your health records.' : 'Start your journey to better health.'}
@@ -128,7 +131,11 @@ const PatientAuth = ({ mode = 'login' }) => {
             {loading ? (
               <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
             ) : (
-              mode === 'login' ? 'Sign In' : 'Register as Patient'
+              mode === 'login'
+                ? 'Sign In'
+                : accountRole === 'doctor'
+                  ? 'Register as Doctor'
+                  : 'Register as Patient'
             )}
           </button>
         </form>
@@ -136,7 +143,11 @@ const PatientAuth = ({ mode = 'login' }) => {
         <p className="text-center mt-6 text-sm text-gray-600">
           {mode === 'login' ? "New here?" : "Already have an account?"}
           <Link
-            to={mode === 'login' ? "/patient-signup" : "/patient-login"}
+            to={
+              accountRole === 'doctor'
+                ? (mode === 'login' ? "/doctor-signup" : "/doctor-login")
+                : (mode === 'login' ? "/patient-signup" : "/patient-login")
+            }
             className="text-[#274760] ml-1 font-bold hover:underline"
           >
             {mode === 'login' ? "Create Account" : "Login"}

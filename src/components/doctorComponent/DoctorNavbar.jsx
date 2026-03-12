@@ -1,41 +1,43 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useLocation, Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext.jsx";
-import {
-  FiBell,
-  FiCalendar,
-  FiChevronDown,
-  FiUser,
-  FiMail,
-  FiKey,
-} from "react-icons/fi";
+import { FiBell, FiCalendar, FiChevronDown, FiKey, FiMail, FiUser } from "react-icons/fi";
 
 const titleFromPath = (pathname) => {
-  if (pathname === "/patient") return "Dashboard";
-  if (pathname.startsWith("/patient/appointments")) return "My Appointments";
-  if (pathname.startsWith("/patient/doctors")) return "My Doctors";
-  if (pathname.startsWith("/patient/profile")) return "My Profile";
-  if (pathname.startsWith("/patient/records")) return "Medical Records";
-  if (pathname.startsWith("/patient/verify-email")) return "Verify Email";
-  if (pathname.startsWith("/patient/change-password")) return "Change Password";
-  return "Patient Portal";
+  if (pathname === "/doctor") return "Dashboard";
+  if (pathname.startsWith("/doctor/appointments")) return "Appointments";
+  if (pathname.startsWith("/doctor/consultations")) return "Consultations";
+  if (pathname.startsWith("/doctor/prescriptions")) return "Prescriptions";
+  if (pathname.startsWith("/doctor/patients")) return "Patients";
+  if (pathname.startsWith("/doctor/notifications")) return "Notifications";
+  if (pathname.startsWith("/doctor/reports")) return "Reports";
+  if (pathname.startsWith("/doctor/verify-email")) return "Verify Email";
+  if (pathname.startsWith("/doctor/change-password")) return "Change Password";
+  if (pathname.startsWith("/doctor/profile")) return "My Profile";
+  return "Doctor Portal";
 };
 
 const subtitleFromPath = (pathname) => {
-  if (pathname === "/patient") return "Overview of your telemedicine activity";
-  if (pathname.startsWith("/patient/appointments"))
-    return "Manage your upcoming and past appointments";
-  if (pathname.startsWith("/patient/doctors"))
-    return "See and contact your care team";
-  if (pathname.startsWith("/patient/profile"))
-    return "Keep your personal and medical details up to date";
-  if (pathname.startsWith("/patient/records"))
-    return "View your prescriptions and medical history";
-  if (pathname.startsWith("/patient/verify-email"))
+  if (pathname === "/doctor") return "Overview of your consultations and schedule";
+  if (pathname.startsWith("/doctor/appointments"))
+    return "Approve, reschedule, or cancel appointments";
+  if (pathname.startsWith("/doctor/consultations"))
+    return "Review consultation history and manage notes";
+  if (pathname.startsWith("/doctor/prescriptions"))
+    return "Create and manage digital prescriptions";
+  if (pathname.startsWith("/doctor/patients"))
+    return "Access patient history to provide informed treatment";
+  if (pathname.startsWith("/doctor/notifications"))
+    return "Alerts for bookings, cancellations, and reminders";
+  if (pathname.startsWith("/doctor/reports"))
+    return "Track activity and performance insights";
+  if (pathname.startsWith("/doctor/verify-email"))
     return "Securely verify your email address";
-  if (pathname.startsWith("/patient/change-password"))
+  if (pathname.startsWith("/doctor/change-password"))
     return "Update your account password securely";
-  return "Secure area for patients only";
+  if (pathname.startsWith("/doctor/profile"))
+    return "Manage your professional details and availability";
+  return "Secure area for doctors only";
 };
 
 const formatToday = () => {
@@ -47,7 +49,7 @@ const formatToday = () => {
   });
 };
 
-const PatientNavbar = () => {
+const DoctorNavbar = () => {
   const location = useLocation();
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
@@ -57,8 +59,8 @@ const PatientNavbar = () => {
   const subtitle = subtitleFromPath(location.pathname);
   const today = formatToday();
 
-  const displayName = user?.username || "Patient";
-  const initials = (displayName || "P")
+  const displayName = user?.username || "Doctor";
+  const initials = (displayName || "D")
     .split(" ")
     .filter(Boolean)
     .slice(0, 2)
@@ -77,10 +79,9 @@ const PatientNavbar = () => {
   return (
     <header className="sticky top-0 z-20 border-b border-gray-100 bg-white/90 backdrop-blur-sm">
       <div className="flex items-center justify-between px-4 sm:px-6 py-3">
-        {/* Left: page title + breadcrumb-ish hint */}
         <div className="min-w-0">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#274760]/40">
-            Patient Area
+            Doctor Area
           </p>
           <h1 className="mt-1 text-lg sm:text-xl font-bold text-[#274760] truncate">
             {title}
@@ -90,7 +91,6 @@ const PatientNavbar = () => {
           </p>
         </div>
 
-        {/* Right: date, notifications, user chip */}
         <div className="flex items-center gap-3 sm:gap-4">
           <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200 text-xs font-medium text-slate-600">
             <FiCalendar size={14} className="text-[#274760]" />
@@ -122,7 +122,7 @@ const PatientNavbar = () => {
                   {displayName}
                 </span>
                 <span className="text-[10px] font-medium uppercase tracking-[0.16em] text-[#274760]/50">
-                  Patient
+                  Doctor
                 </span>
               </div>
               <FiChevronDown size={14} className="hidden sm:block text-slate-400" />
@@ -138,21 +138,21 @@ const PatientNavbar = () => {
                 </div>
                 <div className="p-2">
                   <Link
-                    to="/patient/profile"
+                    to="/doctor/profile"
                     onClick={() => setOpen(false)}
                     className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-slate-700 hover:bg-slate-50"
                   >
                     <FiUser className="text-slate-500" /> Profile
                   </Link>
                   <Link
-                    to="/patient/verify-email"
+                    to="/doctor/verify-email"
                     onClick={() => setOpen(false)}
                     className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-slate-700 hover:bg-slate-50"
                   >
                     <FiMail className="text-slate-500" /> Verify email
                   </Link>
                   <Link
-                    to="/patient/change-password"
+                    to="/doctor/change-password"
                     onClick={() => setOpen(false)}
                     className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-slate-700 hover:bg-slate-50"
                   >
@@ -168,4 +168,5 @@ const PatientNavbar = () => {
   );
 };
 
-export default PatientNavbar;
+export default DoctorNavbar;
+
