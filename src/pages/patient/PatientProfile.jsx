@@ -6,7 +6,6 @@ import {
   FiPhone, FiMapPin, FiActivity, FiAlertCircle, FiCheck, FiX
 } from "react-icons/fi";
 
-// ─── Constants ────────────────────────────────────────────────────────────────
 
 const TABS = ["Personal", "Medical", "Emergency"];
 
@@ -16,8 +15,6 @@ const emptyForm = {
   medicalNotes: "", emergencyContactName: "", emergencyContactPhone: "",
   emergencyRelation: "",
 };
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const isoFromDateInput = (v) => {
   if (!v) return undefined;
@@ -40,8 +37,6 @@ const formatDate = (v) => {
   return Number.isNaN(d.getTime()) ? "—" : d.toLocaleDateString("en-PK", { day: "numeric", month: "short", year: "numeric" });
 };
 
-// ─── Tiny atoms ───────────────────────────────────────────────────────────────
-
 const inputCls =
   "w-full px-3.5 py-2.5 rounded-lg border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#274760]/30 focus:border-[#274760] disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed transition-all";
 
@@ -61,7 +56,7 @@ const InfoRow = ({ icon: Icon, label, value }) => (
     </div>
     <div className="min-w-0 flex-1">
       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{label}</p>
-      <p className="text-[15px] font-semibold text-slate-800 mt-1 break-words leading-snug">
+      <p className="text-[15px] font-semibold text-slate-800 mt-1 wrap-break-word leading-snug">
         {value || <span className="text-slate-300 font-normal text-sm">Not provided</span>}
       </p>
     </div>
@@ -70,8 +65,8 @@ const InfoRow = ({ icon: Icon, label, value }) => (
 
 const Tag = ({ children, color = "blue" }) => {
   const colors = {
-    blue:  "bg-[#274760]/8 text-[#274760] border-[#274760]/15",
-    red:   "bg-red-50 text-red-700 border-red-100",
+    blue: "bg-[#274760]/8 text-[#274760] border-[#274760]/15",
+    red: "bg-red-50 text-red-700 border-red-100",
     amber: "bg-amber-50 text-amber-700 border-amber-100",
     green: "bg-emerald-50 text-emerald-700 border-emerald-100",
   };
@@ -82,22 +77,21 @@ const Tag = ({ children, color = "blue" }) => {
   );
 };
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
 
 const PatientProfile = () => {
   const { user, setUser } = useAuth();
 
-  const [profile, setProfile]               = useState(null);
+  const [profile, setProfile] = useState(null);
   const [initialLoading, setInitialLoading] = useState(true);
-  const [saving, setSaving]                 = useState(false);
+  const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [editing, setEditing]               = useState(false);
-  const [activeTab, setActiveTab]           = useState(0);
-  const [message, setMessage]               = useState({ type: "", text: "" });
-  const [form, setForm]                     = useState(emptyForm);
-  const [imagePreview, setImagePreview]     = useState(null);
+  const [editing, setEditing] = useState(false);
+  const [activeTab, setActiveTab] = useState(0);
+  const [message, setMessage] = useState({ type: "", text: "" });
+  const [form, setForm] = useState(emptyForm);
+  const [imagePreview, setImagePreview] = useState(null);
 
-  const isNew       = !profile?._id;
+  const isNew = !profile?._id;
   const formEnabled = editing || isNew;
 
   const headlineName = useMemo(
@@ -115,22 +109,21 @@ const PatientProfile = () => {
     .split(" ").filter(Boolean).slice(0, 2)
     .map((s) => s[0]?.toUpperCase()).join("");
 
-  // ── Fetch ──────────────────────────────────────────────────────────────────
 
   const hydrateForm = (p) => setForm({
-    phoneNumber:           p?.phoneNumber || "",
-    dob:                   dateInputFromAny(p?.personalInfo?.dob),
-    gender:                p?.personalInfo?.gender || "",
-    city:                  p?.personalInfo?.address?.city || "",
-    street:                p?.personalInfo?.address?.street || "",
-    bloodGroup:            p?.medicalInfo?.bloodGroup || "",
-    allergies:             safeJoin(p?.medicalInfo?.allergies),
-    chronicDiseases:       safeJoin(p?.medicalInfo?.chronicDiseases),
-    medications:           safeJoin(p?.medicalInfo?.medications),
-    medicalNotes:          p?.medicalInfo?.medicalNotes || "",
-    emergencyContactName:  p?.emergencyInfo?.contactName || "",
+    phoneNumber: p?.phoneNumber || "",
+    dob: dateInputFromAny(p?.personalInfo?.dob),
+    gender: p?.personalInfo?.gender || "",
+    city: p?.personalInfo?.address?.city || "",
+    street: p?.personalInfo?.address?.street || "",
+    bloodGroup: p?.medicalInfo?.bloodGroup || "",
+    allergies: safeJoin(p?.medicalInfo?.allergies),
+    chronicDiseases: safeJoin(p?.medicalInfo?.chronicDiseases),
+    medications: safeJoin(p?.medicalInfo?.medications),
+    medicalNotes: p?.medicalInfo?.medicalNotes || "",
+    emergencyContactName: p?.emergencyInfo?.contactName || "",
     emergencyContactPhone: p?.emergencyInfo?.contactPhone || "",
-    emergencyRelation:     p?.emergencyInfo?.relation || "",
+    emergencyRelation: p?.emergencyInfo?.relation || "",
   });
 
   const fetchProfile = async () => {
@@ -161,9 +154,7 @@ const PatientProfile = () => {
     }
   };
 
-  useEffect(() => { fetchProfile(); }, []); // eslint-disable-line
-
-  // ── Handlers ───────────────────────────────────────────────────────────────
+  useEffect(() => { fetchProfile(); }, []);
 
   const onChange = (e) => {
     const { name, value } = e.target;
@@ -215,7 +206,7 @@ const PatientProfile = () => {
     if (dob) pi.dob = dob;
     if (form.gender) pi.gender = form.gender;
     const addr = {};
-    if (form.city?.trim())   addr.city   = form.city.trim();
+    if (form.city?.trim()) addr.city = form.city.trim();
     if (form.street?.trim()) addr.street = form.street.trim();
     if (Object.keys(addr).length) pi.address = addr;
     if (Object.keys(pi).length) payload.personalInfo = pi;
@@ -232,9 +223,9 @@ const PatientProfile = () => {
     if (Object.keys(mi).length) payload.medicalInfo = mi;
 
     const ei = {};
-    if (form.emergencyContactName?.trim())  ei.contactName  = form.emergencyContactName.trim();
+    if (form.emergencyContactName?.trim()) ei.contactName = form.emergencyContactName.trim();
     if (form.emergencyContactPhone?.trim()) ei.contactPhone = form.emergencyContactPhone.trim();
-    if (form.emergencyRelation?.trim())     ei.relation     = form.emergencyRelation.trim();
+    if (form.emergencyRelation?.trim()) ei.relation = form.emergencyRelation.trim();
     if (Object.keys(ei).length) payload.emergencyInfo = ei;
 
     return payload;
@@ -264,16 +255,14 @@ const PatientProfile = () => {
     }
   };
 
-  // ── Render ─────────────────────────────────────────────────────────────────
 
-  const allergiesList  = profile?.medicalInfo?.allergies?.filter(Boolean) || [];
-  const chronicList    = profile?.medicalInfo?.chronicDiseases?.filter(Boolean) || [];
+  const allergiesList = profile?.medicalInfo?.allergies?.filter(Boolean) || [];
+  const chronicList = profile?.medicalInfo?.chronicDiseases?.filter(Boolean) || [];
   const medicationList = profile?.medicalInfo?.medications?.filter(Boolean) || [];
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 font-[system-ui]">
 
-      {/* ── Page title row ── */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-800 tracking-tight">My Profile</h1>
@@ -289,21 +278,19 @@ const PatientProfile = () => {
         </button>
       </div>
 
-      {/* ── Toast ── */}
       {message.text && (
         <div className={[
           "mb-5 flex items-start gap-3 px-4 py-3 rounded-xl border text-sm font-medium",
           message.type === "success" ? "bg-emerald-50 border-emerald-100 text-emerald-700" : "",
-          message.type === "error"   ? "bg-red-50 border-red-100 text-red-700"             : "",
-          message.type === "info"    ? "bg-blue-50 border-blue-100 text-blue-700"           : "",
+          message.type === "error" ? "bg-red-50 border-red-100 text-red-700" : "",
+          message.type === "info" ? "bg-blue-50 border-blue-100 text-blue-700" : "",
         ].join(" ")}>
           {message.type === "success" && <FiCheck size={16} className="mt-0.5 shrink-0" />}
-          {message.type === "error"   && <FiAlertCircle size={16} className="mt-0.5 shrink-0" />}
+          {message.type === "error" && <FiAlertCircle size={16} className="mt-0.5 shrink-0" />}
           <span>{message.text}</span>
         </div>
       )}
 
-      {/* ── Loading ── */}
       {initialLoading ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-10 flex items-center justify-center gap-3">
           <div className="w-5 h-5 rounded-full border-2 border-slate-200 border-t-[#274760] animate-spin" />
@@ -312,16 +299,9 @@ const PatientProfile = () => {
       ) : (
         <div className="space-y-4">
 
-          {/* ══════════════════════════════════════════════════
-              HERO CARD — avatar + name + quick stats + actions
-          ══════════════════════════════════════════════════ */}
           <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
-            {/* Teal accent bar */}
-            <div className="h-1.5 bg-gradient-to-r from-[#274760] to-[#3a6b8f]" />
-
+            <div className="h-1.5 bg-linear-to-r from-[#274760] to-[#3a6b8f]" />
             <div className="p-6 flex flex-col sm:flex-row sm:items-center gap-5">
-
-              {/* Avatar */}
               <div className="relative w-20 h-20 rounded-2xl shrink-0 overflow-hidden bg-[#274760]/8 shadow-sm">
                 {avatarSrc ? (
                   <img src={avatarSrc} alt={headlineName} className="w-full h-full object-cover" />
@@ -343,8 +323,6 @@ const PatientProfile = () => {
                   </label>
                 )}
               </div>
-
-              {/* Name + meta */}
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="text-xl font-bold text-slate-800">{headlineName}</h2>
@@ -362,8 +340,6 @@ const PatientProfile = () => {
                 <p className="text-sm text-slate-400 mt-0.5 truncate">
                   {profile?.user?.email || user?.email || "—"}
                 </p>
-
-                {/* Quick info pills */}
                 <div className="flex flex-wrap gap-2 mt-3">
                   {profile?.phoneNumber && (
                     <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg">
@@ -383,16 +359,13 @@ const PatientProfile = () => {
                   )}
                 </div>
               </div>
-
-              {/* Action buttons */}
               <div className="flex items-center gap-2 shrink-0">
                 {!isNew && (
                   editing ? (
                     <button
                       onClick={cancelEdit}
                       disabled={saving}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-600 text-sm font-semibold hover:bg-slate-50 disabled:opacity-50 transition-colors"
-                    >
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-600 text-sm font-semibold hover:bg-slate-50 disabled:opacity-50 transition-colors">
                       <FiX size={14} /> Cancel
                     </button>
                   ) : (
@@ -408,16 +381,8 @@ const PatientProfile = () => {
               </div>
             </div>
           </div>
-
-          {/* ══════════════════════════════════════════════════
-              MAIN AREA — view mode OR edit form
-          ══════════════════════════════════════════════════ */}
-
           {formEnabled ? (
-            /* ── EDIT / CREATE FORM ── */
             <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
-
-              {/* Tab bar */}
               <div className="flex border-b border-slate-100 bg-slate-50/60">
                 {TABS.map((tab, i) => (
                   <button
@@ -437,8 +402,6 @@ const PatientProfile = () => {
 
               <form onSubmit={handleSave}>
                 <div className="p-6">
-
-                  {/* Tab 0: Personal */}
                   {activeTab === 0 && (
                     <div className="grid grid-cols-2 gap-4">
                       <Field label="Phone Number" hint="10–15 digits" span2>
@@ -474,7 +437,7 @@ const PatientProfile = () => {
                       <Field label="Blood Group">
                         <select name="bloodGroup" value={form.bloodGroup} onChange={onChange} className={inputCls}>
                           <option value="">Select blood group</option>
-                          {["A+","A-","B+","B-","AB+","AB-","O+","O-"].map((bg) => (
+                          {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((bg) => (
                             <option key={bg} value={bg}>{bg}</option>
                           ))}
                         </select>
@@ -566,11 +529,11 @@ const PatientProfile = () => {
                   </div>
                   <h3 className="text-base font-bold text-slate-800">Personal</h3>
                 </div>
-                <InfoRow icon={FiPhone}   label="Phone"  value={profile?.phoneNumber} />
-                <InfoRow icon={FiUser}    label="Gender" value={profile?.personalInfo?.gender} />
-                <InfoRow icon={FiUser}    label="DOB"    value={formatDate(profile?.personalInfo?.dob)} />
-                <InfoRow icon={FiMapPin}  label="City"   value={profile?.personalInfo?.address?.city} />
-                <InfoRow icon={FiMapPin}  label="Street" value={profile?.personalInfo?.address?.street} />
+                <InfoRow icon={FiPhone} label="Phone" value={profile?.phoneNumber} />
+                <InfoRow icon={FiUser} label="Gender" value={profile?.personalInfo?.gender} />
+                <InfoRow icon={FiUser} label="DOB" value={formatDate(profile?.personalInfo?.dob)} />
+                <InfoRow icon={FiMapPin} label="City" value={profile?.personalInfo?.address?.city} />
+                <InfoRow icon={FiMapPin} label="Street" value={profile?.personalInfo?.address?.street} />
               </div>
 
               {/* Medical */}
@@ -628,9 +591,9 @@ const PatientProfile = () => {
                 </div>
                 {profile?.emergencyInfo?.contactName ? (
                   <>
-                    <InfoRow icon={FiUser}  label="Name"         value={profile.emergencyInfo.contactName} />
-                    <InfoRow icon={FiUser}  label="Relationship" value={profile.emergencyInfo.relation} />
-                    <InfoRow icon={FiPhone} label="Phone"        value={profile.emergencyInfo.contactPhone} />
+                    <InfoRow icon={FiUser} label="Name" value={profile.emergencyInfo.contactName} />
+                    <InfoRow icon={FiUser} label="Relationship" value={profile.emergencyInfo.relation} />
+                    <InfoRow icon={FiPhone} label="Phone" value={profile.emergencyInfo.contactPhone} />
                   </>
                 ) : (
                   <p className="text-sm text-slate-400 italic">No emergency contact added.</p>

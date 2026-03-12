@@ -1,9 +1,16 @@
-import React from 'react'
+import React, { useEffect } from "react";
+import { useContext } from "react";
+import { AppContext } from "../../context/Context.jsx";
+import PatientAuth from "./PatientLogin.jsx";
 
-const DoctorLogin = () => {
-  return (
-    <div>DoctorLogin</div>
-  )
-}
+const DoctorLogin = ({ mode = "login" }) => {
+  const { setRole } = useContext(AppContext);
 
-export default DoctorLogin
+  useEffect(() => {
+    setRole("doctor");
+  }, [setRole]);
+
+  return <PatientAuth mode={mode} forcedRole="doctor" />;
+};
+
+export default DoctorLogin;
