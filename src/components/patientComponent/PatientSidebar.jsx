@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { FiHome, FiCalendar, FiUser, FiFileText, FiLogOut, FiActivity } from "react-icons/fi";
 import api from "../../api/axios.js";
@@ -13,12 +13,24 @@ const navItems = [
 ];
 
 const PatientSidebar = () => {
-  const {setUser} = useAuth();
+  const {setUser , user} = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState({ type: '', text: '' });
+  
+    const [loading, setLoading] = useState(false);
+    const [message, setMessage] = useState({ type: "", text: "" });
+  
+    const displayName = useMemo(() => user?.username || "Doctor", [user?.username]);
+    const initials = useMemo(
+      () =>
+        (displayName || "D")
+          .split(" ")
+          .filter(Boolean)
+          .slice(0, 2)
+          .map((s) => s[0]?.toUpperCase())
+          .join(""),
+      [displayName]
+    );
 
   const handleLogout = async (e) => {
     e.preventDefault();
@@ -41,7 +53,7 @@ const PatientSidebar = () => {
 
   return (
     <div
-      className="relative flex flex-col h-screen w-16 md:w-64 px-2 md:px-4 py-7 overflow-hidden shadow-xl transition-all duration-300 flex-shrink-0"
+      className="relative flex flex-col h-screen w-16 md:w-64 px-2 md:px-4 py-7 overflow-hidden shadow-xl transition-all duration-300 shrink-0"
       style={{
         background: "linear-gradient(-193deg, rgba(210,232,242,1) 0%, rgba(169,207,244,1) 50%, rgba(153,197,242,1) 100%)",
       }}
@@ -75,11 +87,11 @@ const PatientSidebar = () => {
       {/* User Card */}
       <div className="flex items-center justify-center md:justify-start gap-3 bg-white/50 backdrop-blur-sm border border-white/70 rounded-2xl p-2 md:p-3 mb-7 relative z-10 shadow-sm">
         <div className="flex items-center justify-center w-10 h-10 md:w-11 md:h-11 rounded-xl bg-[#274760] text-white font-semibold text-base shrink-0 shadow-md shadow-[#274760]/20">
-          JD
+          {initials}
         </div>
         <div className="hidden md:block">
-          <p className="text-sm font-semibold text-[#274760]">Jane Doe</p>
-          <p className="text-[11px] text-[#274760]/50 tracking-wide">Patient · ID #00421</p>
+          <p className="text-sm font-semibold text-[#274760]">{displayName}</p>
+          {/* <p className="text-[11px] text-[#274760]/50 tracking-wide">Patient · ID #00421</p> */}
         </div>
       </div>
 
