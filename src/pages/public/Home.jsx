@@ -6,7 +6,6 @@ import Gastroenterologist from '/src/assets/assets_frontend/Gastroenterologist.s
 import General_physician from '/src/assets/assets_frontend/General_physician.svg'
 import Gynecologist from '/src/assets/assets_frontend/Gynecologist.svg'
 import Dermatologist from '/src/assets/assets_frontend/Dermatologist.svg'
-import AppointmentBanner from '../../components/shared/AppointmentBanner'
 import Banner from '../../components/shared/Banner'
 
 const Home = () => {

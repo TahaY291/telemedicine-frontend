@@ -26,6 +26,16 @@ api.interceptors.response.use(
     async (error) => {
         const originalRequest = error.config;
 
+        // If no response or no status, just reject
+        if (!error.response) {
+            return Promise.reject(error);
+        }
+
+        // Don't try to refresh for the initial auth check itself
+        if (originalRequest.url.includes("/users/is-authenticated")) {
+            return Promise.reject(error);
+        }
+
         if (
             error.response?.status === 401 &&
             !originalRequest._retry &&
@@ -57,7 +67,7 @@ api.interceptors.response.use(
                 });
             } catch (refreshError) {
                 processQueue(refreshError);
-                window.location.href = "/login";
+                // No valid session: let caller / route guards handle redirect
                 return Promise.reject(refreshError);
             } finally {
                 isRefreshing = false;

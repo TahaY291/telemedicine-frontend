@@ -17,12 +17,9 @@ import { useAuth } from "../../context/AuthContext.jsx";
 
 const navItems = [
   { to: "/doctor", icon: FiHome, label: "Dashboard" },
-  { to: "/doctor/appointments", icon: FiCalendar, label: "Appointments" },
   { to: "/doctor/consultations", icon: FiVideo, label: "Consultations" },
-  { to: "/doctor/prescriptions", icon: FiFileText, label: "Prescriptions" },
+  { to: "/patient/doctors", icon: FiFileText, label: "Doctors" },
   { to: "/doctor/patients", icon: FiUsers, label: "Patients" },
-  { to: "/doctor/notifications", icon: FiBell, label: "Notifications" },
-  { to: "/doctor/reports", icon: FiClipboard, label: "Reports" },
   { to: "/doctor/profile", icon: FiUser, label: "Profile" },
 ];
 
