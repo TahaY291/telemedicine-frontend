@@ -18,8 +18,8 @@ import { useAuth } from "../../context/AuthContext.jsx";
 const navItems = [
   { to: "/doctor", icon: FiHome, label: "Dashboard" },
   { to: "/doctor/consultations", icon: FiVideo, label: "Consultations" },
-  { to: "/patient/doctors", icon: FiFileText, label: "Doctors" },
-  { to: "/doctor/patients", icon: FiUsers, label: "Patients" },
+  { to: "/doctor/doctors", icon: FiFileText, label: "Doctors" },   // ✅ fixed
+  { to: "/doctor/patients", icon: FiUsers, label: "Patients" },   // ✅ fixed
   { to: "/doctor/profile", icon: FiUser, label: "Profile" },
 ];
 
@@ -173,4 +173,3 @@ const DoctorSidebar = () => {
 };
 
 export default DoctorSidebar;
-

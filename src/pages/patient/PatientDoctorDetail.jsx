@@ -1,13 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../../api/axios.js";
-import {
-  FiArrowLeft, FiMapPin, FiAward, FiClock, FiDollarSign,
-  FiVideo, FiMic, FiMessageSquare, FiCalendar,
-  FiCheckCircle, FiXCircle, FiAlertCircle, FiCheck,
-} from "react-icons/fi";
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+import DoctorCard from "../../components/shared/DoctorCard.jsx";
 
 const pad2 = (n) => String(n).padStart(2, "0");
 
@@ -27,14 +21,18 @@ const buildTimeSlots = (startTime, endTime, stepMinutes = 30) => {
   const s = parseHHMM(startTime);
   const e = parseHHMM(endTime);
   if (!s || !e) return [];
+
   const start = s.hh * 60 + s.mm;
-  const end   = e.hh * 60 + e.mm;
+  const end = e.hh * 60 + e.mm;
   if (end <= start) return [];
+
   const slots = [];
   for (let t = start; t + stepMinutes <= end; t += stepMinutes) {
-    const aH = Math.floor(t / 60), aM = t % 60;
-    const b  = t + stepMinutes;
-    const bH = Math.floor(b / 60), bM = b % 60;
+    const aH = Math.floor(t / 60);
+    const aM = t % 60;
+    const b = t + stepMinutes;
+    const bH = Math.floor(b / 60);
+    const bM = b % 60;
     slots.push(`${to12h(aH, aM)} - ${to12h(bH, bM)}`);
   }
   return slots;
@@ -43,67 +41,60 @@ const buildTimeSlots = (startTime, endTime, stepMinutes = 30) => {
 const weekdayName = (dateStr) => {
   if (!dateStr) return "";
   const d = new Date(dateStr);
-  return Number.isNaN(d.getTime()) ? "" : d.toLocaleDateString(undefined, { weekday: "long" });
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleDateString(undefined, { weekday: "long" });
 };
-
-const DAY_SHORT = { Monday:"Mon", Tuesday:"Tue", Wednesday:"Wed", Thursday:"Thu", Friday:"Fri", Saturday:"Sat", Sunday:"Sun" };
-const DAYS_ORDER = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-
-const CONSULT_TYPES = [
-  { value: "video", label: "Video",  icon: FiVideo,          color: "text-blue-600   bg-blue-50   border-blue-100"   },
-  { value: "audio", label: "Audio",  icon: FiMic,            color: "text-violet-600 bg-violet-50 border-violet-100" },
-  { value: "chat",  label: "Chat",   icon: FiMessageSquare,  color: "text-emerald-600 bg-emerald-50 border-emerald-100" },
-];
-
-// ─── Atoms ────────────────────────────────────────────────────────────────────
-
-const inputCls =
-  "w-full px-3.5 py-2.5 rounded-lg border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#274760]/25 focus:border-[#274760] transition-all";
-
-const FieldLabel = ({ children }) => (
-  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">{children}</p>
-);
-
-// ─── Main ─────────────────────────────────────────────────────────────────────
 
 const PatientDoctorDetail = () => {
   const { doctorId } = useParams();
-  const navigate     = useNavigate();
+  const navigate = useNavigate();
 
-  const [loading, setLoading]       = useState(true);
-  const [error, setError]           = useState("");
-  const [doctor, setDoctor]         = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [doctor, setDoctor] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-  const [success, setSuccess]       = useState("");
+  const [notice, setNotice] = useState("");
 
-  const [appointmentDate,  setAppointmentDate]  = useState("");
+  const [appointmentDate, setAppointmentDate] = useState("");
   const [consultationType, setConsultationType] = useState("video");
-  const [timeSlot,         setTimeSlot]         = useState("");
-  const [reasonForVisit,   setReasonForVisit]   = useState("");
+  const [timeSlot, setTimeSlot] = useState("");
+  const [reasonForVisit, setReasonForVisit] = useState("");
 
   const load = async () => {
     setLoading(true);
     setError("");
+    setNotice("");
     try {
       const { data } = await api.get(`/doctors/doctor-profile/${doctorId}`);
       setDoctor(data?.data || null);
     } catch (err) {
-      setError(err?.response?.data?.message || "Failed to load doctor details.");
+      setError(
+        err?.response?.data?.message ||
+          "Failed to load doctor details. Please try again."
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { load(); }, [doctorId]); // eslint-disable-line
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [doctorId]);
 
-  const selectedDay           = useMemo(() => weekdayName(appointmentDate), [appointmentDate]);
+  const selectedDay = useMemo(() => weekdayName(appointmentDate), [appointmentDate]);
+
   const availableSlotsForDate = useMemo(() => {
-    const daySlot = (doctor?.availabilitySlots || []).find((s) => s?.day === selectedDay);
-    if (!daySlot?.isAvailable) return [];
+    const slots = doctor?.availabilitySlots || [];
+    const daySlot = slots.find((s) => s?.day === selectedDay);
+    if (!daySlot || !daySlot.isAvailable) return [];
     return buildTimeSlots(daySlot.startTime, daySlot.endTime, 30);
   }, [doctor?.availabilitySlots, selectedDay]);
 
-  useEffect(() => { setTimeSlot(""); }, [appointmentDate, selectedDay]);
+  useEffect(() => {
+    // Reset timeslot when date/day changes
+    setTimeSlot("");
+  }, [appointmentDate, selectedDay]);
 
   const minDate = useMemo(() => {
     const now = new Date();
@@ -115,12 +106,19 @@ const PatientDoctorDetail = () => {
     e.preventDefault();
     setSubmitting(true);
     setError("");
-    setSuccess("");
+    setNotice("");
     try {
-      const { data } = await api.post("/appointments/create-appointment", {
-        doctorId, appointmentDate, timeSlot, consultationType, reasonForVisit,
-      });
-      setSuccess(data?.message || "Appointment request sent!");
+      const payload = {
+        doctorId,
+        appointmentDate,
+        timeSlot,
+        consultationType,
+        reasonForVisit,
+      };
+
+      const { data } = await api.post("/appointments/create-appointment", payload);
+      setNotice(data?.message || "Appointment request sent to doctor.");
+      // After request: go to pending list
       navigate("/patient/appointments?status=pending", { replace: false });
     } catch (err) {
       setError(err?.response?.data?.message || "Failed to request appointment.");
@@ -129,283 +127,207 @@ const PatientDoctorDetail = () => {
     }
   };
 
-  // ── Loading ────────────────────────────────────────────────────────────────
-  if (loading) return (
-    <div className="max-w-5xl mx-auto px-4 py-10 flex items-center justify-center gap-3">
-      <div className="w-5 h-5 rounded-full border-2 border-slate-200 border-t-[#274760] animate-spin" />
-      <p className="text-sm text-slate-500 font-medium">Loading doctor details…</p>
-    </div>
-  );
+  if (loading) {
+    return (
+      <div className="max-w-4xl mx-auto rounded-2xl border border-slate-200 bg-white p-6">
+        <div className="flex items-center gap-3 text-[#274760]">
+          <span className="w-5 h-5 border-2 border-[#274760]/30 border-t-[#274760] rounded-full animate-spin" />
+          <span className="text-sm font-medium">Loading doctor details...</span>
+        </div>
+      </div>
+    );
+  }
 
-  if (error || !doctor) return (
-    <div className="max-w-5xl mx-auto px-4 py-6">
-      <div className="flex items-start gap-3 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
-        <FiAlertCircle size={16} className="mt-0.5 shrink-0" />
+  if (error || !doctor) {
+    return (
+      <div className="max-w-4xl mx-auto rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-700">
         {error || "Doctor not found."}
       </div>
-    </div>
-  );
+    );
+  }
 
-  const { specialization, qualifications, experience, consultationFee: fee,
-          doctorImage, certificateImage, availabilitySlots = [] } = doctor;
-  const city    = doctor?.location?.city;
+  const specialization = doctor?.specialization;
+  const city = doctor?.location?.city;
   const address = doctor?.location?.address;
-  const name    = doctor?.userId?.username || "Doctor";
-  const initials = name.split(" ").filter(Boolean).slice(0, 2).map((s) => s[0]?.toUpperCase()).join("") || "DR";
+  const bio = doctor?.qualifications;
+  const experience = doctor?.experience;
+  const fee = doctor?.consultationFee;
+  const slots = doctor?.availabilitySlots || [];
 
-  const availableDays = availabilitySlots.filter((s) => s.isAvailable);
-
-  // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6 space-y-5">
-
-      {/* ── Back button ── */}
-      <button onClick={() => navigate(-1)}
-        className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-[#274760] transition-colors">
-        <FiArrowLeft size={15} /> Back to doctors
-      </button>
-
-      {/* ── Hero card ── */}
-      <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
-        <div className="h-1.5 bg-gradient-to-r from-[#274760] to-[#3a7ca5]" />
-        <div className="p-6 flex flex-col sm:flex-row gap-5">
-
-          {/* Avatar */}
-          <div className="w-24 h-24 rounded-2xl shrink-0 overflow-hidden bg-[#274760]/8 shadow-sm">
-            {doctorImage
-              ? <img src={doctorImage} alt={name} className="w-full h-full object-cover object-top" />
-              : <div className="w-full h-full flex items-center justify-center text-[#274760] font-bold text-2xl">{initials}</div>
-            }
-          </div>
-
-          {/* Info */}
-          <div className="flex-1 min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-xl font-bold text-slate-800">{name}</h1>
-              {specialization && (
-                <span className="px-2.5 py-0.5 rounded-full bg-[#274760]/8 text-[#274760] text-xs font-bold">
-                  {specialization}
-                </span>
-              )}
-            </div>
-            {qualifications && (
-              <p className="text-sm text-slate-500 mt-0.5">{qualifications}</p>
-            )}
-
-            {/* Stat pills */}
-            <div className="flex flex-wrap gap-2 mt-3">
-              {experience != null && (
-                <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg">
-                  <FiClock size={12} className="text-slate-400" /> {experience} yrs exp
-                </span>
-              )}
-              {city && (
-                <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg">
-                  <FiMapPin size={12} className="text-slate-400" /> {city}
-                </span>
-              )}
-              {fee != null && (
-                <span className="flex items-center gap-1.5 text-sm font-bold text-[#274760] bg-[#274760]/8 px-3 py-1.5 rounded-lg">
-                  <FiDollarSign size={12} /> Rs. {fee}
-                </span>
-              )}
-              {address && (
-                <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg">
-                  <FiMapPin size={12} className="text-slate-400" /> {address}
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Main 2-col grid ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr,380px] gap-5 items-start">
-
-        {/* ── Left: availability + certificate ── */}
+    <div className="max-w-6xl mx-auto space-y-5">
+      <div className="grid grid-cols-1 lg:grid-cols-[1.3fr,1fr] gap-5 items-start">
         <div className="space-y-4">
+          <DoctorCard doctor={doctor} />
 
-          {/* Weekly availability */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
-                <FiCalendar size={14} className="text-emerald-600" />
-              </div>
-              <h2 className="text-base font-bold text-slate-800">Weekly Availability</h2>
-              <span className="ml-auto text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">
-                {availableDays.length} days open
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-              {DAYS_ORDER.map((day) => {
-                const s = availabilitySlots.find((sl) => sl.day === day);
-                const open = s?.isAvailable;
-                return (
-                  <div key={day} className={[
-                    "rounded-xl border p-3 text-center transition-colors",
-                    open ? "border-emerald-100 bg-emerald-50/60" : "border-slate-100 bg-slate-50",
-                  ].join(" ")}>
-                    <div className="flex items-center justify-center gap-1 mb-1">
-                      {open
-                        ? <FiCheckCircle size={11} className="text-emerald-500" />
-                        : <FiXCircle     size={11} className="text-slate-300" />
-                      }
-                      <span className={`text-xs font-bold ${open ? "text-slate-700" : "text-slate-400"}`}>
-                        {DAY_SHORT[day]}
-                      </span>
-                    </div>
-                    {open
-                      ? <p className="text-[10px] font-semibold text-emerald-700 leading-tight">
-                          {to12h(...Object.values(parseHHMM(s.startTime) || {hh:9,mm:0}).map(v=>v))} –<br />
-                          {to12h(...Object.values(parseHHMM(s.endTime)   || {hh:17,mm:0}).map(v=>v))}
-                        </p>
-                      : <p className="text-[10px] text-slate-300 font-medium">Closed</p>
-                    }
-                  </div>
-                );
-              })}
-            </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 space-y-2">
+            <h2 className="text-sm font-semibold text-[#274760]">
+              About this doctor
+            </h2>
+            {bio && (
+              <p className="text-sm text-slate-600">
+                {bio}
+                {experience != null && ` · ${experience} years of experience`}
+              </p>
+            )}
+            {(city || address) && (
+              <p className="text-xs text-slate-500">
+                {city && <span className="font-medium">{city}</span>}
+                {city && address ? ", " : ""}
+                {address}
+              </p>
+            )}
           </div>
-
-          {/* Certificate */}
-          {certificateImage && (
-            <div className="rounded-2xl border border-slate-200 bg-white p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center">
-                  <FiAward size={14} className="text-violet-500" />
-                </div>
-                <h2 className="text-base font-bold text-slate-800">Certificate</h2>
-              </div>
-              <img src={certificateImage} alt="Certificate"
-                className="w-full rounded-xl border border-slate-100 object-cover max-h-64" />
-            </div>
-          )}
         </div>
 
-        {/* ── Right: booking form ── */}
-        <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
-          <div className="h-1 bg-gradient-to-r from-[#274760] to-[#3a7ca5]" />
-          <div className="p-5">
-            <h2 className="text-base font-bold text-slate-800">Book Appointment</h2>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Request a slot — the doctor will confirm it.
+        <div className="space-y-4">
+          <div className="rounded-2xl border border-slate-200 bg-white p-5">
+            <h3 className="text-sm font-semibold text-[#274760]">
+              Request an appointment
+            </h3>
+            <p className="text-xs text-slate-500 mt-1">
+              Submit your request here. The doctor will approve or reschedule it.
             </p>
 
-            {/* Fee highlight */}
-            {fee != null && (
-              <div className="mt-3 flex items-center justify-between rounded-xl bg-[#274760]/5 border border-[#274760]/10 px-4 py-3">
-                <span className="text-xs font-semibold text-slate-600">Consultation fee</span>
-                <span className="text-base font-bold text-[#274760]">Rs. {fee}</span>
-              </div>
-            )}
-
-            {/* Toast */}
-            {success && (
-              <div className="mt-3 flex items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                <FiCheck size={14} /> {success}
+            {notice && (
+              <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                {notice}
               </div>
             )}
             {error && (
-              <div className="mt-3 flex items-center gap-2 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
-                <FiAlertCircle size={14} /> {error}
+              <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {error}
               </div>
             )}
 
-            <form onSubmit={submitAppointment} className="mt-4 space-y-4">
+            {typeof fee === "number" && (
+              <p className="mt-3 text-sm text-slate-700">
+                <span className="font-semibold text-[#274760]">
+                  Consultation fee:
+                </span>{" "}
+                Rs. {fee}
+              </p>
+            )}
 
-              {/* Consultation type */}
+            <form onSubmit={submitAppointment} className="mt-4 space-y-3">
               <div>
-                <FieldLabel>Consultation Type</FieldLabel>
-                <div className="grid grid-cols-3 gap-2">
-                  {CONSULT_TYPES.map(({ value, label, icon: Icon, color }) => (
-                    <button key={value} type="button"
-                      onClick={() => setConsultationType(value)}
-                      className={[
-                        "flex flex-col items-center gap-1.5 py-3 rounded-xl border text-xs font-bold transition-all",
-                        consultationType === value
-                          ? `${color} ring-2 ring-offset-1 ring-current`
-                          : "border-slate-200 text-slate-500 hover:bg-slate-50",
-                      ].join(" ")}>
-                      <Icon size={16} />
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Date */}
-              <div>
-                <FieldLabel>Appointment Date</FieldLabel>
-                <input type="date" min={minDate} value={appointmentDate}
+                <label className="text-xs font-semibold text-slate-700">
+                  Appointment date
+                </label>
+                <input
+                  type="date"
+                  min={minDate}
+                  value={appointmentDate}
                   onChange={(e) => setAppointmentDate(e.target.value)}
-                  className={inputCls} required />
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[#274760]/40"
+                  required
+                />
                 {appointmentDate && (
-                  <p className="mt-1.5 text-xs font-semibold text-slate-500">
-                    {selectedDay
-                      ? availableSlotsForDate.length > 0
-                        ? <span className="text-emerald-600">✓ {selectedDay} — {availableSlotsForDate.length} slots available</span>
-                        : <span className="text-red-500">✗ {selectedDay} — doctor not available</span>
-                      : null
-                    }
+                  <p className="mt-1 text-[11px] text-slate-500">
+                    Day: <span className="font-medium">{selectedDay || "—"}</span>
                   </p>
                 )}
               </div>
 
-              {/* Time slot */}
               <div>
-                <FieldLabel>Time Slot</FieldLabel>
-                {availableSlotsForDate.length > 0 ? (
-                  <div className="grid grid-cols-2 gap-2">
-                    {availableSlotsForDate.map((s) => (
-                      <button key={s} type="button"
-                        onClick={() => setTimeSlot(s)}
-                        className={[
-                          "py-2.5 rounded-lg border text-xs font-semibold transition-all",
-                          timeSlot === s
-                            ? "bg-[#274760] text-white border-[#274760]"
-                            : "border-slate-200 text-slate-600 hover:border-[#274760]/30 hover:bg-slate-50",
-                        ].join(" ")}>
-                        {s}
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <div className={[
-                    "rounded-lg border px-3.5 py-2.5 text-sm",
-                    !appointmentDate ? "border-slate-100 bg-slate-50 text-slate-400" : "border-red-100 bg-red-50 text-red-400",
-                  ].join(" ")}>
-                    {!appointmentDate ? "Select a date first" : "No slots available for this day"}
-                  </div>
-                )}
-                <input type="hidden" value={timeSlot} required />
+                <label className="text-xs font-semibold text-slate-700">
+                  Consultation type
+                </label>
+                <select
+                  value={consultationType}
+                  onChange={(e) => setConsultationType(e.target.value)}
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[#274760]/40"
+                >
+                  <option value="video">Video</option>
+                  <option value="audio">Audio</option>
+                  <option value="chat">Chat</option>
+                </select>
               </div>
 
-              {/* Reason */}
               <div>
-                <FieldLabel>Reason for Visit</FieldLabel>
-                <textarea value={reasonForVisit}
+                <label className="text-xs font-semibold text-slate-700">
+                  Time slot
+                </label>
+                <select
+                  value={timeSlot}
+                  onChange={(e) => setTimeSlot(e.target.value)}
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[#274760]/40"
+                  required
+                  disabled={!appointmentDate || availableSlotsForDate.length === 0}
+                >
+                  <option value="">
+                    {!appointmentDate
+                      ? "Select a date first"
+                      : availableSlotsForDate.length === 0
+                        ? "No available slots for this day"
+                        : "Select a time slot"}
+                  </option>
+                  {availableSlotsForDate.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-700">
+                  Reason for visit
+                </label>
+                <textarea
+                  value={reasonForVisit}
                   onChange={(e) => setReasonForVisit(e.target.value)}
-                  placeholder="Describe your symptoms or reason for the consultation…"
-                  rows={3}
-                  className={`${inputCls} resize-none`}
-                  required />
+                  placeholder="Describe your issue (min 10 characters)"
+                  className="mt-1 w-full min-h-24 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[#274760]/40"
+                  required
+                />
               </div>
 
-              <button type="submit" disabled={submitting || !timeSlot}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#274760] text-white text-sm font-bold py-3 hover:bg-[#1e364a] disabled:opacity-60 active:scale-95 transition-all">
-                {submitting
-                  ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Sending…</>
-                  : "Request Appointment"
-                }
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full rounded-xl bg-[#274760] text-white text-sm font-semibold py-2.5 hover:bg-[#1f394d] transition-colors disabled:opacity-60"
+              >
+                {submitting ? "Sending request..." : "Request appointment"}
               </button>
             </form>
           </div>
-        </div>
 
+          <div className="rounded-2xl border border-slate-200 bg-white p-5">
+            <h3 className="text-sm font-semibold text-[#274760]">
+              Weekly availability
+            </h3>
+            {slots.length === 0 ? (
+              <p className="mt-2 text-xs text-slate-500">
+                Availability has not been set yet.
+              </p>
+            ) : (
+              <div className="mt-3 space-y-2 max-h-60 overflow-y-auto">
+                {slots.map((s) => (
+                  <div
+                    key={`${s.day}-${s.startTime}-${s.endTime}`}
+                    className="flex justify-between items-center text-xs rounded-xl border border-slate-100 bg-slate-50 px-3 py-2"
+                  >
+                    <span className="font-semibold text-[#274760]">
+                      {s.day}
+                    </span>
+                    {s.isAvailable ? (
+                      <span className="text-slate-600">
+                        {s.startTime || "—"} – {s.endTime || "—"}
+                      </span>
+                    ) : (
+                      <span className="text-slate-400">Not available</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
 };
 
 export default PatientDoctorDetail;
+
