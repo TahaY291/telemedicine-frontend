@@ -102,7 +102,7 @@ const AppRoutes = () => {
         <Route path="/patient" element={<PatientLayout />}>
           <Route index element={<PatientDashboard />} />
           <Route path="appointments" element={<PatientAppointments />} />
-          <Route path="doctors" element={<PatientDoctors />} />
+          <Route path="doctors" element={<Doctors />} />
           <Route path="doctors/:doctorId" element={<PatientDoctorDetail />} />
           <Route path="records" element={<PatientRecords />} />
           <Route path="verify-email" element={<VerifyEmail />} />
