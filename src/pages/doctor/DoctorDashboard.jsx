@@ -5,7 +5,7 @@ import { useAuth } from "../../context/AuthContext.jsx";
 import {
   FiActivity, FiCalendar, FiClock, FiUsers,
   FiDollarSign, FiCheckCircle, FiAlertCircle,
-  FiCheck, FiX, FiLink, FiRefreshCw,
+   FiRefreshCw,
 } from "react-icons/fi";
 import {
   Chart as ChartJS,
@@ -417,6 +417,7 @@ const DoctorDashboard = () => {
                       onLinkChange={(val) => setMeetingLinks((p) => ({ ...p, [a._id]: val }))}
                       onApprove={() => approve(a._id)}
                       onCancel={() => cancel(a._id)}
+                      formatDate={formatDate}
                     />
                   ))}
                 </div>

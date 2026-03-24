@@ -1,3 +1,6 @@
+import {FiCheck, FiX, FiLink} from 'react-icons/fi'
+
+
 const PendingCard = ({
     appt,
     onApprove,
@@ -5,6 +8,7 @@ const PendingCard = ({
     meetingLink,
     onLinkChange,
     saving,
+    formatDate
 }) => {
     const name =
         appt?.patient?.userId?.username ||

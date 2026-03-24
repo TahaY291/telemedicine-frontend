@@ -16,7 +16,6 @@ import PatientDashboard from "../pages/patient/PatientDashboard.jsx";
 import PatientAppointments from "../pages/patient/PatientAppointments.jsx";
 import PatientProfile from "../pages/patient/PatientProfile.jsx";
 import PatientRecords from "../pages/patient/PatientRecords.jsx";
-import PatientDoctors from "../pages/patient/PatientDoctors.jsx";
 import PatientDoctorDetail from "../pages/patient/PatientDoctorDetail.jsx";
 
 import DoctorDashboard from "../pages/doctor/DoctorDashboard.jsx";
@@ -123,6 +122,7 @@ const AppRoutes = () => {
           <Route path="verify-email" element={<VerifyEmail />} />
           <Route path="change-password" element={<ChangePassword />} />
           <Route path="doctors" element={<Doctors />} />
+          <Route path="doctors/:doctorId" element={<PatientDoctorDetail />} />
           <Route path="profile" element={<DoctorProfile />} />
         </Route>
       </Route>

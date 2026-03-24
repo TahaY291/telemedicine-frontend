@@ -1,15 +1,15 @@
 import React from "react";
 
-const DoctorCard = ({ doctor }) => {
-  const name           = doctor?.userId?.username || "Doctor";
+const DoctorCard = ({ doctor , onClick }) => {
+  const name = doctor?.userId?.username || "Doctor";
   const specialization = doctor?.specialization || "Specialist";
   const qualifications = doctor?.qualifications || "";
-  const city           = doctor?.location?.city || "";
-  const fee            = doctor?.consultationFee;
-  const experience     = doctor?.experience;
-  const rating         = doctor?.rating ?? 0;
-  const totalReviews   = doctor?.totalReviews ?? 0;
-  const image          = doctor?.doctorImage;
+  const city = doctor?.location?.city || "";
+  const fee = doctor?.consultationFee;
+  const experience = doctor?.experience;
+  const rating = doctor?.rating ?? 0;
+  const totalReviews = doctor?.totalReviews ?? 0;
+  const image = doctor?.doctorImage;
 
   const initials = name
     .split(" ").filter(Boolean).slice(0, 2)
@@ -32,10 +32,8 @@ const DoctorCard = ({ doctor }) => {
           </div>
         )}
 
-        {/* Gradient fade at bottom of photo */}
         <div className="absolute bottom-0 left-0 right-0 h-16 bg-linear-to-t from-white/60 to-transparent" />
 
-        {/* Specialization badge — overlaid on photo bottom */}
         <div className="absolute bottom-3 left-1/2 -translate-x-1/2 whitespace-nowrap">
           <span className="px-4 py-1.5 rounded-full bg-[#274760] text-white text-[11px] font-bold tracking-wide shadow-md">
             {specialization}
@@ -81,6 +79,7 @@ const DoctorCard = ({ doctor }) => {
         {/* Book button */}
         <button
           type="button"
+          onClick={onClick}
           className="w-full rounded-xl bg-[#274760] text-white text-xs font-bold py-2.5 hover:bg-[#1f394d] active:scale-95 transition-all duration-150 shadow-sm shadow-[#274760]/20"
         >
           Book Appointment
