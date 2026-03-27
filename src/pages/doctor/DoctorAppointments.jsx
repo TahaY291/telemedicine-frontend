@@ -214,7 +214,6 @@ const DoctorAppointments = () => {
     try {
       await api.put(`/appointments/update-appointment/${appointmentId}`, {
         status: "approved",
-        meetingLink: meetingLinks[appointmentId] || "",
       });
       await load();
     } catch (err) {
