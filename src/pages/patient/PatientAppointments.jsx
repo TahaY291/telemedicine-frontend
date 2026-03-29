@@ -3,10 +3,10 @@ import { useLocation } from "react-router-dom";
 import api from "../../api/axios.js";
 import {
   FiCalendar, FiClock, FiVideo, FiX, FiCheck,
-  FiAlertCircle, FiRefreshCw, FiLink, FiFileText,
+  FiAlertCircle, FiRefreshCw, FiFileText,
   FiPhone,
 } from "react-icons/fi";
-import VideoCall from "../../components/doctorComponent/VideoCall.jsx"; 
+import VideoCall from "../../components/doctorComponent/VideoCall.jsx";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -25,19 +25,19 @@ const formatDate = (value) => {
 };
 
 const STATUS_META = {
-  pending:     { label: "Pending",     color: "bg-amber-50   text-amber-700  border-amber-100"  },
-  approved:    { label: "Approved",    color: "bg-emerald-50 text-emerald-700 border-emerald-100" },
-  rescheduled: { label: "Rescheduled", color: "bg-blue-50    text-blue-700   border-blue-100"   },
-  cancelled:   { label: "Cancelled",   color: "bg-red-50     text-red-700    border-red-100"    },
-  completed:   { label: "Completed",   color: "bg-slate-100  text-slate-600  border-slate-200"  },
+  pending: { label: "Pending", color: "bg-amber-50   text-amber-700  border-amber-100" },
+  approved: { label: "Approved", color: "bg-emerald-50 text-emerald-700 border-emerald-100" },
+  rescheduled: { label: "Rescheduled", color: "bg-blue-50    text-blue-700   border-blue-100" },
+  cancelled: { label: "Cancelled", color: "bg-red-50     text-red-700    border-red-100" },
+  completed: { label: "Completed", color: "bg-slate-100  text-slate-600  border-slate-200" },
 };
 
 const TAB_ICONS = {
-  pending:     <FiClock    size={12} />,
-  approved:    <FiCheck    size={12} />,
+  pending: <FiClock size={12} />,
+  approved: <FiCheck size={12} />,
   rescheduled: <FiCalendar size={12} />,
-  cancelled:   <FiX        size={12} />,
-  completed:   <FiFileText size={12} />,
+  cancelled: <FiX size={12} />,
+  completed: <FiFileText size={12} />,
 };
 
 // ─── Status Badge ─────────────────────────────────────────────────────────────
@@ -53,25 +53,27 @@ const StatusBadge = ({ status }) => {
 
 // ─── Appointment Card ─────────────────────────────────────────────────────────
 
-const AppointmentCard = ({ appointment: a, onCancel, onJoinCall }) => {
-  const doctorName     = a?.doctor?.userId?.username || "Doctor";
+const AppointmentCard = ({ appointment: a, onCancel, onJoinCall, onAcceptReschedule }) => {
+  const doctorName = a?.doctor?.userId?.username || "Doctor";
   const specialization = a?.doctor?.specialization || "";
-  const initials       = doctorName.split(" ").filter(Boolean).slice(0, 2).map(s => s[0]?.toUpperCase()).join("") || "DR";
+  const initials = doctorName.split(" ").filter(Boolean).slice(0, 2).map(s => s[0]?.toUpperCase()).join("") || "DR";
 
-  const isApproved     = a?.status === "approved";
-  const isCancellable  = ["pending", "approved", "rescheduled"].includes(a?.status);
+  const isApproved = a?.status === "approved";
+  const isCancellable = ["pending", "approved", "rescheduled"].includes(a?.status);
   const isVideoOrAudio = a?.consultationType === "video" || a?.consultationType === "audio";
-  const callIsLive     = isApproved && isVideoOrAudio && !!a?.meetingStartedAt;
+  const callIsLive = isApproved && isVideoOrAudio && !!a?.meetingStartedAt;
+  const isRescheduled = a?.status === "rescheduled";
+
+
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white hover:border-[#274760]/20 hover:shadow-md transition-all duration-200 overflow-hidden">
       {/* Status accent bar */}
-      <div className={`h-1 w-full ${
-        a?.status === "pending"     ? "bg-amber-400"   :
-        a?.status === "approved"    ? "bg-emerald-400" :
-        a?.status === "rescheduled" ? "bg-blue-400"    :
-        a?.status === "cancelled"   ? "bg-red-400"     : "bg-slate-300"
-      }`} />
+      <div className={`h-1 w-full ${a?.status === "pending" ? "bg-amber-400" :
+          a?.status === "approved" ? "bg-emerald-400" :
+            a?.status === "rescheduled" ? "bg-blue-400" :
+              a?.status === "cancelled" ? "bg-red-400" : "bg-slate-300"
+        }`} />
 
       <div className="p-5">
         {/* Top row */}
@@ -122,7 +124,7 @@ const AppointmentCard = ({ appointment: a, onCancel, onJoinCall }) => {
         )}
 
         {/* Meeting link */}
-        {isApproved && a?.meetingLink && (
+        {/* {isApproved && a?.meetingLink && (
           <div className="mt-3 flex items-center gap-2 rounded-xl bg-emerald-50 border border-emerald-100 px-4 py-2.5">
             <FiLink size={13} className="text-emerald-600 shrink-0" />
             <a href={a.meetingLink} target="_blank" rel="noreferrer"
@@ -130,7 +132,7 @@ const AppointmentCard = ({ appointment: a, onCancel, onJoinCall }) => {
               {a.meetingLink}
             </a>
           </div>
-        )}
+        )} */}
 
         {/* Cancellation reason */}
         {a?.status === "cancelled" && a?.cancellationReason && (
@@ -141,6 +143,25 @@ const AppointmentCard = ({ appointment: a, onCancel, onJoinCall }) => {
         )}
 
         {/* Action row */}
+        {isRescheduled && (
+          <div className="mt-4 pt-4 border-t border-slate-100 flex gap-2">
+
+            <button
+              onClick={() => onAcceptReschedule(a._id)}
+              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 text-white text-xs font-bold py-2.5 hover:bg-emerald-500 transition-all"
+            >
+              <FiCheck size={13} /> Accept
+            </button>
+
+            <button
+              onClick={() => onCancel(a._id)}
+              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 text-red-600 text-xs font-bold py-2.5 hover:bg-red-50 transition-all"
+            >
+              <FiX size={13} /> Reject
+            </button>
+
+          </div>
+        )}
         {(isCancellable || callIsLive) && (
           <div className="mt-4 pt-4 border-t border-slate-100 flex gap-2">
             {callIsLive && (
@@ -154,9 +175,8 @@ const AppointmentCard = ({ appointment: a, onCancel, onJoinCall }) => {
             )}
             {isCancellable && (
               <button onClick={() => onCancel(a._id)}
-                className={`inline-flex items-center justify-center gap-1.5 rounded-xl border border-red-200 text-red-600 text-xs font-bold py-2.5 hover:bg-red-50 active:scale-95 transition-all ${
-                  callIsLive ? "px-4" : "flex-1"
-                }`}>
+                className={`inline-flex items-center justify-center gap-1.5 rounded-xl border border-red-200 text-red-600 text-xs font-bold py-2.5 hover:bg-red-50 active:scale-95 transition-all ${callIsLive ? "px-4" : "flex-1"
+                  }`}>
                 <FiX size={13} /> Cancel
               </button>
             )}
@@ -180,15 +200,15 @@ const AppointmentCard = ({ appointment: a, onCancel, onJoinCall }) => {
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 const PatientAppointments = () => {
-  const query         = useQuery();
+  const query = useQuery();
   const initialStatus = query.get("status") || "pending";
 
   const [activeStatus, setActiveStatus] = useState(
     statuses.includes(initialStatus) ? initialStatus : "pending"
   );
-  const [loading, setLoading]   = useState(true);
-  const [error, setError]       = useState("");
-  const [items, setItems]       = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [items, setItems] = useState([]);
   const [activeCall, setActiveCall] = useState(null);
 
   const load = async (status) => {
@@ -203,6 +223,18 @@ const PatientAppointments = () => {
       setError(err?.response?.data?.message || "Failed to load appointments.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const acceptReschedule = async (appointmentId) => {
+    setError("");
+    try {
+      await api.put(`/appointments/update-appointment/${appointmentId}`, {
+        status: "approved",
+      });
+      await load(activeStatus);
+    } catch (err) {
+      setError(err?.response?.data?.message || "Failed to accept reschedule.");
     }
   };
 
@@ -227,8 +259,8 @@ const PatientAppointments = () => {
     try {
       const { data } = await api.get(`/appointments/${appointment._id}/room`);
       setActiveCall({
-        appointmentId:    appointment._id,
-        roomId:           data.data.roomID,
+        appointmentId: appointment._id,
+        roomId: data.data.roomID,
         consultationType: data.data.consultationType,
       });
     } catch (err) {
@@ -324,6 +356,7 @@ const PatientAppointments = () => {
                 appointment={a}
                 onCancel={cancel}
                 onJoinCall={handleJoinCall}
+                onAcceptReschedule={acceptReschedule}
               />
             ))}
           </div>
