@@ -29,6 +29,7 @@ import DoctorReports from "../pages/doctor/DoctorReports.jsx";
 
 import VerifyEmail from "../pages/shared/VerifyEmail.jsx";
 import ChangePassword from "../pages/shared/ChangePassword.jsx";
+import DoctorPatientProfile from "../pages/doctor/DoctorPatientProfile.jsx";
 
 const PatientProtectedRoute = () => {
   const { user, loading } = useAuth();
@@ -123,6 +124,7 @@ const AppRoutes = () => {
           <Route path="change-password" element={<ChangePassword />} />
           <Route path="doctors" element={<Doctors />} />
           <Route path="doctors/:doctorId" element={<PatientDoctorDetail />} />
+          <Route path="patient/:patientId" element={<DoctorPatientProfile />} />
           <Route path="profile" element={<DoctorProfile />} />
         </Route>
       </Route>

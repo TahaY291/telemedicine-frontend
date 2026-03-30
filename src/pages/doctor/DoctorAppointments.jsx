@@ -10,38 +10,40 @@ import { useAuth } from "../../context/AuthContext.jsx";
 import AppointmentCard from '../../components/doctorComponent/AppointmentCard.jsx'
 
 const STATUS_META = {
-  pending:     { label: "Pending",     color: "bg-amber-50   text-amber-700  border-amber-100"  },
-  approved:    { label: "Approved",    color: "bg-emerald-50 text-emerald-700 border-emerald-100" },
-  rescheduled: { label: "Rescheduled", color: "bg-blue-50    text-blue-700   border-blue-100"   },
-  cancelled:   { label: "Cancelled",   color: "bg-red-50     text-red-700    border-red-100"    },
-  completed:   { label: "Completed",   color: "bg-slate-100  text-slate-600  border-slate-200"  },
+  pending: { label: "Pending", color: "bg-amber-50   text-amber-700  border-amber-100" },
+  approved: { label: "Approved", color: "bg-emerald-50 text-emerald-700 border-emerald-100" },
+  rescheduled: { label: "Rescheduled", color: "bg-blue-50    text-blue-700   border-blue-100" },
+  cancelled: { label: "Cancelled", color: "bg-red-50     text-red-700    border-red-100" },
+  completed: { label: "Completed", color: "bg-slate-100  text-slate-600  border-slate-200" },
+  expired: { label: "Expired", color: "bg-orange-50  text-orange-700 border-orange-200" }, // ← ADD
 };
 
-const TAB_ORDER = ["pending", "approved", "rescheduled", "cancelled", "completed"];
+const TAB_ORDER = ["pending", "approved", "rescheduled", "cancelled", "completed", "expired"];
 const TAB_ICONS = {
-  pending:     <FiClock    size={12} />,
-  approved:    <FiCheck    size={12} />,
-  rescheduled: <FiCalendar size={12} />,
-  cancelled:   <FiX        size={12} />,
-  completed:   <FiFileText size={12} />,
+  pending:     <FiClock       size={12} />,
+  approved:    <FiCheck       size={12} />,
+  rescheduled: <FiCalendar    size={12} />,
+  cancelled:   <FiX           size={12} />,
+  completed:   <FiFileText    size={12} />,
+  expired:     <FiAlertCircle size={12} />, // ← ADD
 };
-
 const DoctorAppointments = () => {
   const { user } = useAuth();
 
-  const [status, setStatus]             = useState("pending");
-  const [loading, setLoading]           = useState(true);
-  const [error, setError]               = useState("");
-  const [items, setItems]               = useState([]);
+  const [status, setStatus] = useState("pending");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [items, setItems] = useState([]);
   // const [meetingLinks, setMeetingLinks] = useState({});
-  const [activeCall, setActiveCall]     = useState(null);
+  const [activeCall, setActiveCall] = useState(null);
 
-  const load = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const { data } = await api.get("/appointments/doctor-appointments", { params: { status } });
-      setItems(data?.data || []);
+ const load = async () => {
+  setLoading(true);
+  setError("");
+  try {
+    await api.post("/appointments/expire").catch(() => {}); // ← ADD
+    const { data } = await api.get("/appointments/doctor-appointments", { params: { status } });
+    setItems(data?.data || []);
     } catch (err) {
       setError(err?.response?.data?.message || "Failed to load appointments.");
     } finally {
@@ -96,8 +98,8 @@ const DoctorAppointments = () => {
     try {
       const { data } = await api.post(`/appointments/${appointment._id}/start-call`);
       setActiveCall({
-        appointmentId:    appointment._id,
-        roomId:           data.data.roomID,
+        appointmentId: appointment._id,
+        roomId: data.data.roomID,
         consultationType: data.data.consultationType,
         patientName:
           appointment?.patient?.user?.username ||
@@ -120,10 +122,10 @@ const DoctorAppointments = () => {
         <VideoCall
           appointmentId={activeCall.appointmentId}
           roomId={activeCall.roomId}
-          role="doctor"
+          role="patient"
           consultationType={activeCall.consultationType}
-          localName={user?.username || "Doctor"}
-          remoteName={activeCall.patientName}
+          paymentStatus={activeCall.paymentStatus}       // ← ADD
+          consultationFee={activeCall.consultationFee}   // ← ADD
           onCallEnd={handleCallEnd}
         />
       )}
