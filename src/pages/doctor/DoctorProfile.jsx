@@ -119,6 +119,8 @@ const DoctorProfile = () => {
     });
   };
 
+
+
   const load = async () => {
     setLoading(true);
     setMessage({ type: "", text: "" });
@@ -182,6 +184,14 @@ const DoctorProfile = () => {
     setCertPreview(null);
     setMessage({ type: "", text: "" });
   };
+
+
+  const getTodayLocalDate = () => {
+  const today = new Date();
+  const offset = today.getTimezoneOffset();
+  const localDate = new Date(today.getTime() - offset * 60 * 1000);
+  return localDate.toISOString().split("T")[0];
+};
 
   const submit = async (e) => {
     e.preventDefault();

@@ -28,12 +28,12 @@ const buildTimeSlots = (startTime, endTime, stepMinutes = 30) => {
   const e = parseHHMM(endTime);
   if (!s || !e) return [];
   const start = s.hh * 60 + s.mm;
-  const end   = e.hh * 60 + e.mm;
+  const end = e.hh * 60 + e.mm;
   if (end <= start) return [];
   const slots = [];
   for (let t = start; t + stepMinutes <= end; t += stepMinutes) {
     const aH = Math.floor(t / 60), aM = t % 60;
-    const b  = t + stepMinutes;
+    const b = t + stepMinutes;
     const bH = Math.floor(b / 60), bM = b % 60;
     slots.push(`${to12h(aH, aM)} - ${to12h(bH, bM)}`);
   }
@@ -46,13 +46,13 @@ const weekdayName = (dateStr) => {
   return Number.isNaN(d.getTime()) ? "" : d.toLocaleDateString(undefined, { weekday: "long" });
 };
 
-const DAYS_ORDER = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-const DAY_SHORT  = { Monday:"Mon", Tuesday:"Tue", Wednesday:"Wed", Thursday:"Thu", Friday:"Fri", Saturday:"Sat", Sunday:"Sun" };
+const DAYS_ORDER = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const DAY_SHORT = { Monday: "Mon", Tuesday: "Tue", Wednesday: "Wed", Thursday: "Thu", Friday: "Fri", Saturday: "Sat", Sunday: "Sun" };
 
 const CONSULT_TYPES = [
-  { value: "video", label: "Video", icon: FiVideo,         color: "text-blue-600   bg-blue-50   border-blue-200"    },
-  { value: "audio", label: "Audio", icon: FiMic,           color: "text-violet-600 bg-violet-50 border-violet-200"  },
-  { value: "chat",  label: "Chat",  icon: FiMessageSquare, color: "text-emerald-600 bg-emerald-50 border-emerald-200" },
+  { value: "video", label: "Video", icon: FiVideo, color: "text-blue-600   bg-blue-50   border-blue-200" },
+  { value: "audio", label: "Audio", icon: FiMic, color: "text-violet-600 bg-violet-50 border-violet-200" },
+  { value: "chat", label: "Chat", icon: FiMessageSquare, color: "text-emerald-600 bg-emerald-50 border-emerald-200" },
 ];
 
 const inputCls = "w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#274760]/20 focus:border-[#274760] transition-all";
@@ -61,18 +61,18 @@ const inputCls = "w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-whi
 
 const PatientDoctorDetail = () => {
   const { doctorId } = useParams();
-  const navigate     = useNavigate();
+  const navigate = useNavigate();
 
-  const [loading, setLoading]       = useState(true);
-  const [error, setError]           = useState("");
-  const [doctor, setDoctor]         = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [doctor, setDoctor] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-  const [success, setSuccess]       = useState("");
+  const [success, setSuccess] = useState("");
 
-  const [appointmentDate,  setAppointmentDate]  = useState("");
+  const [appointmentDate, setAppointmentDate] = useState("");
   const [consultationType, setConsultationType] = useState("video");
-  const [timeSlot,         setTimeSlot]         = useState("");
-  const [reasonForVisit,   setReasonForVisit]   = useState("");
+  const [timeSlot, setTimeSlot] = useState("");
+  const [reasonForVisit, setReasonForVisit] = useState("");
 
   const load = async () => {
     setLoading(true);
@@ -87,9 +87,9 @@ const PatientDoctorDetail = () => {
     }
   };
 
-  useEffect(() => { load(); }, [doctorId]); // eslint-disable-line
+  useEffect(() => { load(); }, [doctorId]); 
 
-  const selectedDay           = useMemo(() => weekdayName(appointmentDate), [appointmentDate]);
+  const selectedDay = useMemo(() => weekdayName(appointmentDate), [appointmentDate]);
   const availableSlotsForDate = useMemo(() => {
     const daySlot = (doctor?.availabilitySlots || []).find(s => s?.day === selectedDay);
     if (!daySlot?.isAvailable) return [];
@@ -100,7 +100,6 @@ const PatientDoctorDetail = () => {
 
   const minDate = useMemo(() => {
     const now = new Date();
-    now.setDate(now.getDate() + 1);
     return `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`;
   }, []);
 
@@ -139,14 +138,14 @@ const PatientDoctorDetail = () => {
     </div>
   );
 
-  const name             = doctor?.userId?.username || "Doctor";
-  const specialization   = doctor?.specialization  || "";
-  const qualifications   = doctor?.qualifications  || "";
-  const experience       = doctor?.experience;
-  const fee              = doctor?.consultationFee;
-  const city             = doctor?.location?.city;
-  const address          = doctor?.location?.address;
-  const doctorImage      = doctor?.doctorImage;
+  const name = doctor?.userId?.username || "Doctor";
+  const specialization = doctor?.specialization || "";
+  const qualifications = doctor?.qualifications || "";
+  const experience = doctor?.experience;
+  const fee = doctor?.consultationFee;
+  const city = doctor?.location?.city;
+  const address = doctor?.location?.address;
+  const doctorImage = doctor?.doctorImage;
   const certificateImage = doctor?.certificateImage;
   const availabilitySlots = doctor?.availabilitySlots || [];
   const initials = name.split(" ").filter(Boolean).slice(0, 2).map(s => s[0]?.toUpperCase()).join("") || "DR";
@@ -239,10 +238,10 @@ const PatientDoctorDetail = () => {
               <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">Weekly Schedule</p>
               <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
                 {DAYS_ORDER.map(day => {
-                  const s    = availabilitySlots.find(sl => sl.day === day);
+                  const s = availabilitySlots.find(sl => sl.day === day);
                   const open = s?.isAvailable;
-                  const st   = s ? parseHHMM(s.startTime) : null;
-                  const en   = s ? parseHHMM(s.endTime)   : null;
+                  const st = s ? parseHHMM(s.startTime) : null;
+                  const en = s ? parseHHMM(s.endTime) : null;
                   return (
                     <div key={day} className={[
                       "rounded-xl border p-2.5 text-center",
@@ -251,7 +250,7 @@ const PatientDoctorDetail = () => {
                       <div className="flex items-center justify-center gap-1 mb-1">
                         {open
                           ? <FiCheckCircle size={10} className="text-emerald-500" />
-                          : <FiXCircle     size={10} className="text-slate-300"   />
+                          : <FiXCircle size={10} className="text-slate-300" />
                         }
                         <span className={`text-[11px] font-bold ${open ? "text-slate-700" : "text-slate-400"}`}>
                           {DAY_SHORT[day]}
