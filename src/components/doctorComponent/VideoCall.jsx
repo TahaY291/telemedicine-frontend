@@ -36,8 +36,8 @@ const PrescriptionPanel = ({ appointmentId, onClose, onSaved }) => {
   }));
 
   const submit = async () => {
-    if (!form.diagnosis.trim())                    { setError("Diagnosis is required."); return; }
-    if (form.medicines.some(m => !m.name.trim()))  { setError("All medicine names are required."); return; }
+    if (!form.diagnosis.trim())                   { setError("Diagnosis is required."); return; }
+    if (form.medicines.some(m => !m.name.trim())) { setError("All medicine names are required."); return; }
     setSaving(true); setError("");
     try {
       await api.post("/prescriptions", {
@@ -92,7 +92,7 @@ const PrescriptionPanel = ({ appointmentId, onClose, onSaved }) => {
             )}
             <div>
               <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Diagnosis *</label>
-              <input value={form.diagnosis} onChange={e => setForm(f => ({...f, diagnosis: e.target.value}))}
+              <input value={form.diagnosis} onChange={e => setForm(f => ({ ...f, diagnosis: e.target.value }))}
                 placeholder="e.g. Acute pharyngitis" className={iCls} />
             </div>
             <div>
@@ -106,43 +106,46 @@ const PrescriptionPanel = ({ appointmentId, onClose, onSaved }) => {
                 {form.medicines.map((m, i) => (
                   <div key={i} className="rounded-lg border border-slate-700 bg-slate-800/60 p-2.5 space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] text-slate-500 font-bold uppercase">Medicine {i+1}</span>
+                      <span className="text-[10px] text-slate-500 font-bold uppercase">Medicine {i + 1}</span>
                       {form.medicines.length > 1 && (
                         <button onClick={() => removeMedicine(i)} className="text-slate-600 hover:text-red-400 transition-colors">
                           <FiTrash2 size={11} />
                         </button>
                       )}
                     </div>
-                    <input value={m.name} onChange={e => updateMed(i,"name",e.target.value)} placeholder="Name *" className={iCls} />
+                    <input value={m.name} onChange={e => updateMed(i, "name", e.target.value)} placeholder="Name *" className={iCls} />
                     <div className="grid grid-cols-2 gap-1.5">
-                      <input value={m.dosage}   onChange={e => updateMed(i,"dosage",e.target.value)}   placeholder="Dosage"   className={iCls} />
-                      <input value={m.duration} onChange={e => updateMed(i,"duration",e.target.value)} placeholder="Duration" className={iCls} />
+                      <input value={m.dosage}   onChange={e => updateMed(i, "dosage", e.target.value)}   placeholder="Dosage"   className={iCls} />
+                      <input value={m.duration} onChange={e => updateMed(i, "duration", e.target.value)} placeholder="Duration" className={iCls} />
                     </div>
-                    <input value={m.instructions} onChange={e => updateMed(i,"instructions",e.target.value)} placeholder="Instructions" className={iCls} />
+                    <input value={m.instructions} onChange={e => updateMed(i, "instructions", e.target.value)} placeholder="Instructions" className={iCls} />
                   </div>
                 ))}
               </div>
             </div>
             <div>
               <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Lab Tests (comma separated)</label>
-              <input value={form.labTests} onChange={e => setForm(f => ({...f, labTests: e.target.value}))}
+              <input value={form.labTests} onChange={e => setForm(f => ({ ...f, labTests: e.target.value }))}
                 placeholder="e.g. CBC, Blood Sugar" className={iCls} />
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Follow-up</label>
-                <input type="date" value={form.followUpDate} onChange={e => setForm(f => ({...f, followUpDate: e.target.value}))} className={iCls} />
+                <input type="date" value={form.followUpDate} onChange={e => setForm(f => ({ ...f, followUpDate: e.target.value }))} className={iCls} />
               </div>
               <div>
                 <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Notes</label>
-                <input value={form.notes} onChange={e => setForm(f => ({...f, notes: e.target.value}))} placeholder="Notes" className={iCls} />
+                <input value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} placeholder="Notes" className={iCls} />
               </div>
             </div>
           </div>
           <div className="px-4 py-3 border-t border-slate-700 shrink-0">
             <button onClick={submit} disabled={saving}
               className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 text-white text-xs font-bold py-2.5 hover:bg-emerald-500 disabled:opacity-60 transition-colors">
-              {saving ? <><span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />Saving…</> : <><FiFileText size={12} />Save Prescription</>}
+              {saving
+                ? <><span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />Saving…</>
+                : <><FiFileText size={12} />Save Prescription</>
+              }
             </button>
           </div>
         </>
@@ -181,7 +184,7 @@ const RatingModal = ({ appointmentId, doctorName, onDone }) => {
           <p className="text-sm text-slate-400 text-center mt-1">How was your experience with {doctorName}?</p>
 
           <div className="flex items-center justify-center gap-2 my-6">
-            {[1,2,3,4,5].map(star => (
+            {[1, 2, 3, 4, 5].map(star => (
               <button key={star}
                 onMouseEnter={() => setHovered(star)}
                 onMouseLeave={() => setHovered(0)}
@@ -194,7 +197,7 @@ const RatingModal = ({ appointmentId, doctorName, onDone }) => {
 
           {rating > 0 && (
             <p className="text-center text-sm font-bold text-amber-400 -mt-3 mb-4">
-              {["","Poor","Fair","Good","Very Good","Excellent"][rating]}
+              {["", "Poor", "Fair", "Good", "Very Good", "Excellent"][rating]}
             </p>
           )}
 
@@ -259,62 +262,61 @@ const VideoCall = ({
   onCallEnd,
   localName       = "You",
   remoteName      = "",
-  paymentStatus   = "pending",   // ← ADD
-  consultationFee = 0,           // ← ADD
-}) =>{
+  paymentStatus   = "pending",
+  consultationFee = 0,
+}) => {
 
-  // ✅ ADD THESE 3 lines right after the opening of VideoCall, before localVideoRef
-const [paymentDone,  setPaymentDone]  = useState(paymentStatus === "paid");
-const [paying,       setPaying]       = useState(false);
-const [paymentError, setPaymentError] = useState("");
+  const [paymentDone,  setPaymentDone]  = useState(paymentStatus === "paid");
+  const [paying,       setPaying]       = useState(false);
+  const [paymentError, setPaymentError] = useState("");
 
+  const socketCtx = useSocket();
+  const socket    = socketCtx?.socket ?? null;
 
-const socketCtx = useSocket();
-const socket    = socketCtx?.socket ?? null;
+  const localVideoRef     = useRef(null);
+  const remoteVideoRef    = useRef(null);
+  const peerConnectionRef = useRef(null);
+  const localStreamRef    = useRef(null);
+  const timerRef          = useRef(null);
 
-const localVideoRef     = useRef(null);
-const remoteVideoRef    = useRef(null);
-const peerConnectionRef = useRef(null);
-const localStreamRef    = useRef(null);
-const timerRef          = useRef(null);
+  const [localAudio,  setLocalAudio]  = useState(true);
+  const [localVideo,  setLocalVideo]  = useState(consultationType === "video");
+  const [remoteAudio, setRemoteAudio] = useState(true);
+  const [remoteVideo, setRemoteVideo] = useState(true);
+  const [callStatus,  setCallStatus]  = useState("connecting");
+  const [socketReady, setSocketReady] = useState(false);
+  const [duration,    setDuration]    = useState(0);
 
-const [localAudio,  setLocalAudio]  = useState(true);
-const [localVideo,  setLocalVideo]  = useState(consultationType === "video");
-const [remoteAudio, setRemoteAudio] = useState(true);
-const [remoteVideo, setRemoteVideo] = useState(true);
-const [callStatus,  setCallStatus]  = useState("connecting");
-const [socketReady, setSocketReady] = useState(false);
-const [duration,    setDuration]    = useState(0);
+  const [showPrescription,  setShowPrescription]  = useState(false);
+  const [prescriptionSaved, setPrescriptionSaved] = useState(false);
+  const [postCall,          setPostCall]          = useState(false);
 
-const [showPrescription,  setShowPrescription]  = useState(false);
-const [prescriptionSaved, setPrescriptionSaved] = useState(false);
-const [postCall,          setPostCall]          = useState(false);
+  const displayRemote = remoteName || (role === "doctor" ? "Patient" : "Doctor");
+  const displayLocal  = localName;
 
-const displayRemote = remoteName || (role === "doctor" ? "Patient" : "Doctor");
-const displayLocal  = localName;
+  const handlePay = async () => {
+    setPaying(true);
+    setPaymentError("");
+    try {
+      await api.post(`/appointments/${appointmentId}/pay`);
+      setPaymentDone(true);
+    } catch (err) {
+      setPaymentError(err?.response?.data?.message || "Payment failed. Try again.");
+    } finally {
+      setPaying(false);
+    }
+  };
 
-const handlePay = async () => {
-  setPaying(true);
-  setPaymentError("");
-  try {
-    await api.post(`/appointments/${appointmentId}/pay`);
-    setPaymentDone(true);
-  } catch (err) {
-    setPaymentError(err?.response?.data?.message || "Payment failed. Try again.");
-  } finally {
-    setPaying(false);
-  }
-};
-useEffect(() => { if (socket) setSocketReady(true); }, [socket]);
+  useEffect(() => { if (socket) setSocketReady(true); }, [socket]);
 
-useEffect(() => {
+  useEffect(() => {
     if (callStatus === "active") {
       timerRef.current = setInterval(() => setDuration(d => d + 1), 1000);
     }
     return () => clearInterval(timerRef.current);
   }, [callStatus]);
 
-  const fmt = (s) => `${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`;
+  const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
   const getLocalStream = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({
@@ -328,70 +330,26 @@ useEffect(() => {
   const createPC = (stream) => {
     const pc = new RTCPeerConnection(ICE_SERVERS);
     stream.getTracks().forEach(t => pc.addTrack(t, stream));
-    pc.ontrack = (e) => { if (remoteVideoRef.current) remoteVideoRef.current.srcObject = e.streams[0]; setCallStatus("active"); };
-    pc.onicecandidate = (e) => { if (e.candidate && socket) socket.emit("ice-candidate", { roomId, candidate: e.candidate }); };
-    pc.onconnectionstatechange = () => { if (["disconnected","failed"].includes(pc.connectionState)) endCall(); };
+    pc.ontrack = (e) => {
+      if (remoteVideoRef.current) remoteVideoRef.current.srcObject = e.streams[0];
+      setCallStatus("active");
+    };
+    pc.onicecandidate = (e) => {
+      if (e.candidate && socket) socket.emit("ice-candidate", { roomId, candidate: e.candidate });
+    };
+    pc.onconnectionstatechange = () => {
+      if (["disconnected", "failed"].includes(pc.connectionState)) endCall();
+    };
     peerConnectionRef.current = pc;
     return pc;
   };
 
+  // ✅ useEffect only handles WebRTC setup — NO JSX returned here
   useEffect(() => {
-
-    if (role === "patient" && !paymentDone) {
-  return (
-    <div className="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-sm bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden shadow-2xl">
-        <div className="h-1 bg-gradient-to-r from-emerald-500 to-teal-500" />
-        <div className="p-6 text-center">
-
-          <div className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center mx-auto mb-4">
-            <span className="text-2xl">💳</span>
-          </div>
-
-          <h2 className="text-lg font-bold text-white">Payment Required</h2>
-          <p className="text-sm text-slate-400 mt-1.5">
-            Complete payment to join the consultation
-          </p>
-
-          <div className="mt-5 rounded-xl bg-slate-700/60 border border-slate-600 px-4 py-4">
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">
-              Consultation Fee
-            </p>
-            <p className="text-3xl font-bold text-white">Rs. {consultationFee}</p>
-            <p className="text-xs text-slate-500 mt-1">Cash payment on confirmation</p>
-          </div>
-
-          {paymentError && (
-            <div className="mt-3 flex items-start gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2.5 text-xs text-red-400 text-left">
-              <FiAlertCircle size={12} className="mt-0.5 shrink-0" /> {paymentError}
-            </div>
-          )}
-
-          <button
-            onClick={handlePay}
-            disabled={paying}
-            className="w-full mt-4 inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 text-white text-sm font-bold py-3 hover:bg-emerald-500 disabled:opacity-60 transition-colors"
-          >
-            {paying
-              ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Processing…</>
-              : "Confirm Payment & Join"
-            }
-          </button>
-
-          <button
-            onClick={onCallEnd}
-            className="w-full mt-2 py-2.5 rounded-xl border border-slate-600 text-slate-400 text-sm font-semibold hover:bg-slate-700 transition-colors"
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-
     if (!socketReady || !socket || !roomId) return;
+
+    // If patient hasn't paid yet, don't set up WebRTC at all
+    if (role === "patient" && !paymentDone) return;
 
     const setup = async () => {
       const stream = await getLocalStream();
@@ -417,23 +375,25 @@ useEffect(() => {
         if (role === "doctor") await pc.setRemoteDescription(new RTCSessionDescription(answer));
       });
       socket.on("ice-candidate", async ({ candidate }) => {
-        try { await pc.addIceCandidate(new RTCIceCandidate(candidate)); } catch(e) { console.error(e); }
+        try { await pc.addIceCandidate(new RTCIceCandidate(candidate)); } catch (e) { console.error(e); }
       });
       socket.on("peer-media-toggle", ({ type, enabled }) => {
         if (type === "audio") setRemoteAudio(enabled);
         if (type === "video") setRemoteVideo(enabled);
       });
-      socket.on("call-ended",       () => { setCallStatus("ended"); cleanup(); setPostCall(true); });
-      socket.on("peer-disconnected",() => { setCallStatus("ended"); cleanup(); setPostCall(true); });
+      socket.on("call-ended",        () => { setCallStatus("ended"); cleanup(); setPostCall(true); });
+      socket.on("peer-disconnected", () => { setCallStatus("ended"); cleanup(); setPostCall(true); });
     };
 
     setup().catch(console.error);
+
     return () => {
       cleanup();
-      ["user-joined","webrtc-offer","webrtc-answer","ice-candidate","peer-media-toggle","call-ended","peer-disconnected"]
+      ["user-joined", "webrtc-offer", "webrtc-answer", "ice-candidate",
+       "peer-media-toggle", "call-ended", "peer-disconnected"]
         .forEach(ev => socket.off(ev));
     };
-  }, [socketReady, roomId]); // eslint-disable-line
+  }, [socketReady, roomId, paymentDone]); // eslint-disable-line
 
   const cleanup = () => {
     clearInterval(timerRef.current);
@@ -466,6 +426,53 @@ useEffect(() => {
     setPostCall(true);
   };
 
+  // ✅ Payment wall — rendered as JSX, NOT inside useEffect
+  if (role === "patient" && !paymentDone) {
+    return (
+      <div className="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center p-4">
+        <div className="w-full max-w-sm bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden shadow-2xl">
+          <div className="h-1 bg-gradient-to-r from-emerald-500 to-teal-500" />
+          <div className="p-6 text-center">
+            <div className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl">💳</span>
+            </div>
+            <h2 className="text-lg font-bold text-white">Payment Required</h2>
+            <p className="text-sm text-slate-400 mt-1.5">
+              Complete payment to join the consultation
+            </p>
+            <div className="mt-5 rounded-xl bg-slate-700/60 border border-slate-600 px-4 py-4">
+              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                Consultation Fee
+              </p>
+              <p className="text-3xl font-bold text-white">Rs. {consultationFee}</p>
+              <p className="text-xs text-slate-500 mt-1">Cash payment on confirmation</p>
+            </div>
+            {paymentError && (
+              <div className="mt-3 flex items-start gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2.5 text-xs text-red-400 text-left">
+                <FiAlertCircle size={12} className="mt-0.5 shrink-0" /> {paymentError}
+              </div>
+            )}
+            <button
+              onClick={handlePay}
+              disabled={paying}
+              className="w-full mt-4 inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 text-white text-sm font-bold py-3 hover:bg-emerald-500 disabled:opacity-60 transition-colors">
+              {paying
+                ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Processing…</>
+                : "Confirm Payment & Join"
+              }
+            </button>
+            <button
+              onClick={onCallEnd}
+              className="w-full mt-2 py-2.5 rounded-xl border border-slate-600 text-slate-400 text-sm font-semibold hover:bg-slate-700 transition-colors">
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ✅ Socket not ready yet
   if (!socketReady) return (
     <div className="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center gap-3">
       <div className="w-6 h-6 rounded-full border-2 border-slate-600 border-t-white animate-spin" />
@@ -473,13 +480,13 @@ useEffect(() => {
     </div>
   );
 
+  // ✅ Main call UI
   return (
     <>
       <div className="fixed inset-0 bg-slate-900 z-50 flex flex-col">
 
         {/* ── Top bar ── */}
         <div className="flex items-center justify-between px-5 py-3 bg-slate-800/90 border-b border-slate-700 shrink-0">
-          {/* Remote person */}
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-full bg-[#274760] flex items-center justify-center text-white text-sm font-bold shrink-0">
               {displayRemote.charAt(0).toUpperCase()}
@@ -496,7 +503,6 @@ useEffect(() => {
             </div>
           </div>
 
-          {/* Local user */}
           <div className="flex items-center gap-2">
             <div className="text-right">
               <p className="text-slate-300 text-xs font-semibold">{displayLocal}</p>

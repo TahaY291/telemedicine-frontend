@@ -93,9 +93,10 @@ const AppointmentCard = ({ appointment: a, onCancel, onJoinCall, onPay, payingId
   const isCancellable = ["pending", "approved", "rescheduled"].includes(a?.status);
   const isVideoOrAudio = a?.consultationType === "video" || a?.consultationType === "audio";
 
-  const isPaid = a?.payment?.status === "paid";
-  const callTimeOk = isCallTimeActive(a?.appointmentDate, a?.timeSlot);
-  const callIsLive = isApproved && isVideoOrAudio && !!a?.meetingStartedAt && callTimeOk;
+ const isPaid = a?.payment?.status === "paid";
+const callTimeOk = isCallTimeActive(a?.appointmentDate, a?.timeSlot);
+const doctorStartedCall = !!a?.meetingStartedAt;  // ← doctor must have started
+const callIsLive = isApproved && isVideoOrAudio && doctorStartedCall && callTimeOk;
 
   const slotStart = parseSlotStart(a?.appointmentDate, a?.timeSlot);
   const minutesUntil = slotStart
@@ -181,68 +182,80 @@ const AppointmentCard = ({ appointment: a, onCancel, onJoinCall, onPay, payingId
         )}
 
         {/* ── Payment + Call section (approved video/audio only) ── */}
-        {isApproved && isVideoOrAudio && (
-          <div className="mt-4 pt-4 border-t border-slate-100 space-y-2">
+     {isApproved && isVideoOrAudio && (
+  <div className="mt-4 pt-4 border-t border-slate-100 space-y-2">
 
-            {/* Payment status row */}
-            <div className={`flex items-center justify-between rounded-xl px-4 py-2.5 ${isPaid
-                ? "bg-emerald-50 border border-emerald-100"
-                : "bg-amber-50 border border-amber-100"
-              }`}>
-              <div className="flex items-center gap-2">
-                <FiDollarSign size={13} className={isPaid ? "text-emerald-600" : "text-amber-600"} />
-                <div>
-                  <p className={`text-xs font-bold ${isPaid ? "text-emerald-700" : "text-amber-700"}`}>
-                    {isPaid ? "Payment confirmed" : "Payment required"}
-                  </p>
-                  {a?.payment?.amount > 0 && (
-                    <p className="text-[10px] text-slate-500">Rs. {a.payment.amount}</p>
-                  )}
-                </div>
-              </div>
-              {isPaid ? (
-                <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full">
-                  <FiCheck size={9} /> Paid
-                </span>
-              ) : (
-                <button
-                  onClick={() => onPay(a._id)}
-                  disabled={isPaying}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500 text-white text-[11px] font-bold hover:bg-amber-400 disabled:opacity-60 transition-colors">
-                  {isPaying
-                    ? <><span className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Processing…</>
-                    : <><FiDollarSign size={11} /> Pay Now</>
-                  }
-                </button>
+    {/* ── Doctor hasn't started yet ── */}
+    {!doctorStartedCall ? (
+      <div className="flex items-center gap-2 rounded-xl bg-blue-50 border border-blue-100 px-4 py-3">
+        <FiClock size={13} className="text-blue-500 shrink-0" />
+        <div>
+          <p className="text-xs font-bold text-blue-700">Waiting for doctor to start</p>
+          <p className="text-[11px] text-blue-500 mt-0.5">
+            Payment will be required once the doctor starts the call
+          </p>
+        </div>
+      </div>
+    ) : (
+      <>
+        {/* Payment status row — only shown after doctor starts */}
+        <div className={`flex items-center justify-between rounded-xl px-4 py-2.5 ${
+          isPaid ? "bg-emerald-50 border border-emerald-100" : "bg-amber-50 border border-amber-100"
+        }`}>
+          <div className="flex items-center gap-2">
+            <FiDollarSign size={13} className={isPaid ? "text-emerald-600" : "text-amber-600"} />
+            <div>
+              <p className={`text-xs font-bold ${isPaid ? "text-emerald-700" : "text-amber-700"}`}>
+                {isPaid ? "Payment confirmed" : "Payment required"}
+              </p>
+              {a?.payment?.amount > 0 && (
+                <p className="text-[10px] text-slate-500">Rs. {a.payment.amount}</p>
               )}
             </div>
-
-            {/* Join call button */}
-            {!isPaid ? (
-              <div className="flex items-center gap-2 rounded-xl bg-slate-50 border border-slate-200 px-4 py-2.5">
-                <FiLock size={13} className="text-slate-400 shrink-0" />
-                <p className="text-xs text-slate-500 font-medium">
-                  Complete payment to join the call
-                </p>
-              </div>
-            ) : !callIsLive ? (
-              <div className="rounded-xl bg-blue-50 border border-blue-100 px-4 py-2.5">
-                <p className="text-xs text-blue-600 font-medium flex items-center gap-2">
-                  <FiClock size={12} />
-                  {callSoonLabel ?? "Waiting for the doctor to start the call…"}
-                </p>
-              </div>
-            ) : (
-              <button onClick={() => onJoinCall(a)}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 text-white text-xs font-bold py-2.5 hover:bg-emerald-500 active:scale-95 transition-all shadow-sm shadow-emerald-900/20">
-                {a.consultationType === "video"
-                  ? <><FiVideo size={13} /> Join Video Call</>
-                  : <><FiPhone size={13} /> Join Audio Call</>
-                }
-              </button>
-            )}
           </div>
+          {isPaid ? (
+            <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full">
+              <FiCheck size={9} /> Paid
+            </span>
+          ) : (
+            <button
+              onClick={() => onPay(a._id)}
+              disabled={isPaying}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500 text-white text-[11px] font-bold hover:bg-amber-400 disabled:opacity-60 transition-colors">
+              {isPaying
+                ? <><span className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Processing…</>
+                : <><FiDollarSign size={11} /> Pay Now</>
+              }
+            </button>
+          )}
+        </div>
+
+        {/* Join call button */}
+        {!isPaid ? (
+          <div className="flex items-center gap-2 rounded-xl bg-slate-50 border border-slate-200 px-4 py-2.5">
+            <FiLock size={13} className="text-slate-400 shrink-0" />
+            <p className="text-xs text-slate-500 font-medium">Complete payment to join the call</p>
+          </div>
+        ) : !callIsLive ? (
+          <div className="rounded-xl bg-blue-50 border border-blue-100 px-4 py-2.5">
+            <p className="text-xs text-blue-600 font-medium flex items-center gap-2">
+              <FiClock size={12} />
+              {callSoonLabel ?? "Waiting for the doctor to start the call…"}
+            </p>
+          </div>
+        ) : (
+          <button onClick={() => onJoinCall(a)}
+            className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 text-white text-xs font-bold py-2.5 hover:bg-emerald-500 active:scale-95 transition-all shadow-sm shadow-emerald-900/20">
+            {a.consultationType === "video"
+              ? <><FiVideo size={13} /> Join Video Call</>
+              : <><FiPhone size={13} /> Join Audio Call</>
+            }
+          </button>
         )}
+      </>
+    )}
+  </div>
+)}
 
         {/* ── Cancel button (non-video or separate) ── */}
         {isCancellable && (
