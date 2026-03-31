@@ -20,12 +20,12 @@ const STATUS_META = {
 
 const TAB_ORDER = ["pending", "approved", "rescheduled", "cancelled", "completed", "expired"];
 const TAB_ICONS = {
-  pending:     <FiClock       size={12} />,
-  approved:    <FiCheck       size={12} />,
-  rescheduled: <FiCalendar    size={12} />,
-  cancelled:   <FiX           size={12} />,
-  completed:   <FiFileText    size={12} />,
-  expired:     <FiAlertCircle size={12} />, // ← ADD
+  pending: <FiClock size={12} />,
+  approved: <FiCheck size={12} />,
+  rescheduled: <FiCalendar size={12} />,
+  cancelled: <FiX size={12} />,
+  completed: <FiFileText size={12} />,
+  expired: <FiAlertCircle size={12} />, // ← ADD
 };
 const DoctorAppointments = () => {
   const { user } = useAuth();
@@ -37,13 +37,13 @@ const DoctorAppointments = () => {
   // const [meetingLinks, setMeetingLinks] = useState({});
   const [activeCall, setActiveCall] = useState(null);
 
- const load = async () => {
-  setLoading(true);
-  setError("");
-  try {
-    await api.post("/appointments/expire").catch(() => {}); // ← ADD
-    const { data } = await api.get("/appointments/doctor-appointments", { params: { status } });
-    setItems(data?.data || []);
+  const load = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      await api.post("/appointments/expire").catch(() => { }); // ← ADD
+      const { data } = await api.get("/appointments/doctor-appointments", { params: { status } });
+      setItems(data?.data || []);
     } catch (err) {
       setError(err?.response?.data?.message || "Failed to load appointments.");
     } finally {
@@ -122,14 +122,11 @@ const DoctorAppointments = () => {
         <VideoCall
           appointmentId={activeCall.appointmentId}
           roomId={activeCall.roomId}
-          role="patient"
+          role="doctor"   // ← FIXED
           consultationType={activeCall.consultationType}
-          paymentStatus={activeCall.paymentStatus}       // ← ADD
-          consultationFee={activeCall.consultationFee}   // ← ADD
           onCallEnd={handleCallEnd}
         />
       )}
-
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-5">
 
         {/* Header */}
