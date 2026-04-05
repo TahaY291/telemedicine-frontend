@@ -7,13 +7,11 @@ const SocketContext = createContext(null);
 export const SocketProvider = ({ children }) => {
   const { user } = useAuth();
 
-  // Store socket in state so consumers re-render when it becomes available
   const [socket, setSocket]       = useState(null);
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
     if (!user) {
-      // Not logged in — disconnect any existing socket
       setSocket((prev) => {
         prev?.disconnect();
         return null;
