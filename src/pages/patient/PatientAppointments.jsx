@@ -8,7 +8,14 @@ import {
   FiPhone, FiDollarSign, FiLock,
 } from "react-icons/fi";
 import VideoCall from "../../components/doctorComponent/VideoCall.jsx"
-
+import { StatusBadge } from "../../components/patientComponent/appointment/AppointmentSharedUi.jsx";
+import {  parseSlotStart, isCallTimeActive } from "../../utils/Appointments/appointmentUtils.js";
+import { TAB_ICONS } from "../../utils/Appointments/AppointmentConstants.jsx";
+import RefreshBanner from "../../components/shared/RefreshBanner.jsx";
+import { formatDate } from "../../utils/commonUtils.js";
+import Spinner from "../../components/shared/Spinner.jsx";
+import ErrorBanner from "../../components/shared/ErrorBanner.jsx";
+import { getInitials } from "../../utils/commonUtils.js";
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const statuses = ["pending", "approved", "rescheduled", "cancelled", "completed", "expired"];
@@ -18,63 +25,8 @@ const useQuery = () => {
   return useMemo(() => new URLSearchParams(search), [search]);
 };
 
-const formatDate = (value) => {
-  if (!value) return "—";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
-};
 
-/**
- * Parse slot start and check if we're within [start - 15min, start + 30min]
- */
-const parseSlotStart = (appointmentDate, timeSlot) => {
-  if (!appointmentDate || !timeSlot) return null;
-  try {
-    const startPart = timeSlot.split(" - ")[0].trim();
-    const [timePart, meridiem] = startPart.split(" ");
-    let [hours, minutes] = timePart.split(":").map(Number);
-    if (meridiem === "PM" && hours !== 12) hours += 12;
-    if (meridiem === "AM" && hours === 12) hours = 0;
-    const base = new Date(appointmentDate);
-    return new Date(base.getFullYear(), base.getMonth(), base.getDate(), hours, minutes, 0, 0);
-  } catch { return null; }
-};
 
-const isCallTimeActive = (appointmentDate, timeSlot) => {
-  const slotStart = parseSlotStart(appointmentDate, timeSlot);
-  if (!slotStart) return false;
-  const now = Date.now();
-  return now >= slotStart.getTime() - 15 * 60 * 1000 &&
-    now <= slotStart.getTime() + 30 * 60 * 1000;
-};
-
-const STATUS_META = {
-  pending: { label: "Pending", color: "bg-amber-50   text-amber-700  border-amber-100" },
-  approved: { label: "Approved", color: "bg-emerald-50 text-emerald-700 border-emerald-100" },
-  rescheduled: { label: "Rescheduled", color: "bg-blue-50    text-blue-700   border-blue-100" },
-  cancelled: { label: "Cancelled", color: "bg-red-50     text-red-700    border-red-100" },
-  completed: { label: "Completed", color: "bg-slate-100  text-slate-600  border-slate-200" },
-   expired: { label: "Expired", color: "bg-orange-50 text-orange-700 border-orange-200" }, // ✅
-};
-
-const TAB_ICONS = {
-  pending: <FiClock size={12} />,
-  approved: <FiCheck size={12} />,
-  rescheduled: <FiCalendar size={12} />,
-  cancelled: <FiX size={12} />,
-  completed: <FiFileText size={12} />,
-  expired: <FiAlertCircle size={12} />, // ✅
-};
-
-const StatusBadge = ({ status }) => {
-  const meta = STATUS_META[status] || STATUS_META.pending;
-  return (
-    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold border uppercase tracking-wide ${meta.color}`}>
-      {meta.label}
-    </span>
-  );
-};
 
 // ─── Appointment Card ─────────────────────────────────────────────────────────
 
@@ -87,7 +39,7 @@ const AppointmentCard = ({ appointment: a, onCancel, onJoinCall, onPay, payingId
 
   const doctorName = a?.doctor?.userId?.username || "Doctor";
   const specialization = a?.doctor?.specialization || "";
-  const initials = doctorName.split(" ").filter(Boolean).slice(0, 2).map(s => s[0]?.toUpperCase()).join("") || "DR";
+  const initials = getInitials(doctorName);
 
   const isApproved = a?.status === "approved";
   const isCancellable = ["pending", "approved", "rescheduled"].includes(a?.status);
@@ -223,7 +175,7 @@ const callIsLive = isApproved && isVideoOrAudio && doctorStartedCall && callTime
               disabled={isPaying}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500 text-white text-[11px] font-bold hover:bg-amber-400 disabled:opacity-60 transition-colors">
               {isPaying
-                ? <><span className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Processing…</>
+                ? <><Spinner/> Processing…</>
                 : <><FiDollarSign size={11} /> Pay Now</>
               }
             </button>
@@ -367,18 +319,9 @@ const load = async (status) => {
       )}
 
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-5">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-800 tracking-tight">My Appointments</h1>
-            <p className="text-sm text-slate-400 mt-0.5">Track and manage your consultation requests</p>
-          </div>
-          <button onClick={() => load(activeStatus)} disabled={loading}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-500 text-sm font-medium hover:bg-slate-50 disabled:opacity-50 transition-colors">
-            <FiRefreshCw size={13} className={loading ? "animate-spin" : ""} />
-            Refresh
-          </button>
-        </div>
 
+      <RefreshBanner tabName={"My Appointments"} text={"Track and manage your consultation requests"} onClick={() => load(activeStatus)} initialLoading={loading}  />
+        
         <div className="flex gap-1.5 flex-wrap">
           {statuses.map((s) => (
             <button key={s} type="button" onClick={() => setActiveStatus(s)}
@@ -395,14 +338,12 @@ const load = async (status) => {
         </div>
 
         {error && (
-          <div className="flex items-start gap-3 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
-            <FiAlertCircle size={16} className="mt-0.5 shrink-0" /> {error}
-          </div>
+          <ErrorBanner error={error} />
         )}
 
         {loading ? (
           <div className="rounded-2xl border border-slate-200 bg-white p-10 flex items-center justify-center gap-3">
-            <div className="w-5 h-5 rounded-full border-2 border-slate-200 border-t-[#274760] animate-spin" />
+            <Spinner/>
             <p className="text-sm text-slate-500 font-medium">Loading appointments…</p>
           </div>
         ) : items.length === 0 ? (

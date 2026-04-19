@@ -119,7 +119,7 @@ const NotificationRow = ({ notification, onMarkRead, onDelete }) => {
 // ─── skeleton loader ───────────────────────────────────────────────────────────
 const SkeletonRow = () => (
     <div className="flex items-start gap-4 px-5 py-4 rounded-2xl border border-slate-100 bg-white animate-pulse">
-        <div className="w-10 h-10 rounded-full bg-slate-100 flex-shrink-0" />
+        <div className="w-10 h-10 rounded-full bg-slate-100 shrink-0" />
         <div className="flex-1 space-y-2 pt-1">
             <div className="h-3 w-24 bg-slate-100 rounded-full" />
             <div className="h-3 w-3/4 bg-slate-100 rounded-full" />

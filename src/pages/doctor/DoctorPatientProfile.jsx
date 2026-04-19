@@ -8,15 +8,8 @@ import {
     FiRefreshCw, FiDroplet, FiVideo, FiMic, FiMessageSquare,
     FiChevronDown, FiChevronUp,
 } from "react-icons/fi";
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-const formatDate = (value) => {
-    if (!value) return "—";
-    const d = new Date(value);
-    if (Number.isNaN(d.getTime())) return "—";
-    return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
-};
+import { formatDate } from "../../utils/commonUtils.js";
+import Spinner from "../../components/shared/Spinner.jsx";
 
 const calcAge = (dob) => {
     if (!dob) return null;
@@ -123,9 +116,7 @@ const PrescriptionForm = ({ appointmentId, existingPrescription, onSaved, onCanc
     return (
         <form onSubmit={submit} className="space-y-4">
             {error && (
-                <div className="flex items-start gap-2 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
-                    <FiAlertCircle size={14} className="mt-0.5 shrink-0" /> {error}
-                </div>
+                <ErrorBanner error={error} />
             )}
 
             {/* Diagnosis */}
@@ -203,7 +194,7 @@ const PrescriptionForm = ({ appointmentId, existingPrescription, onSaved, onCanc
                 <button type="submit" disabled={saving}
                     className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-[#274760] text-white text-sm font-bold py-2.5 hover:bg-[#1e364a] disabled:opacity-60 transition-all">
                     {saving
-                        ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Saving…</>
+                        ? <><Spinner/> Saving…</>
                         : <><FiSave size={13} /> {isEdit ? "Update Prescription" : "Save Prescription"}</>
                     }
                 </button>
@@ -392,8 +383,8 @@ const AppointmentRow = ({ appointment, onWritePrescription }) => {
 
                             {loadingRx && (
                                 <div className="flex items-center gap-2 text-xs text-slate-400 py-2">
-                                    <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-200 border-t-[#274760] animate-spin" />
-                                    Loading…
+                                <Spinner/>
+                                 Loading…
                                 </div>
                             )}
 
@@ -475,7 +466,7 @@ const DoctorPatientProfile = () => {
 
     if (loading) return (
         <div className="max-w-5xl mx-auto px-4 py-10 flex items-center justify-center gap-3">
-            <div className="w-5 h-5 rounded-full border-2 border-slate-200 border-t-[#274760] animate-spin" />
+            <Spinner />
             <p className="text-sm text-slate-500 font-medium">Loading patient profile…</p>
         </div>
     );
@@ -507,8 +498,7 @@ const DoctorPatientProfile = () => {
     const medicalNotes = patient?.medicalInfo?.medicalNotes;
     const emergency = patient?.emergencyInfo;
 
-    const initials = name.split(" ").filter(Boolean).slice(0, 2)
-        .map(s => s[0]?.toUpperCase()).join("") || "P";
+    const initials = getInitials(name);
 
     return (
         <div className="max-w-5xl mx-auto px-4 py-6 space-y-4">
@@ -695,7 +685,7 @@ const DoctorPatientProfile = () => {
                     >
                         {loadingAppts ? (
                             <div className="flex items-center justify-center gap-2 py-8 text-sm text-slate-400">
-                                <div className="w-4 h-4 rounded-full border-2 border-slate-200 border-t-[#274760] animate-spin" />
+                                <Spinner/>
                                 Loading appointments…
                             </div>
                         ) : appointments.length === 0 ? (

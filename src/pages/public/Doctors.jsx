@@ -138,7 +138,7 @@ const Doctors = () => {
               onChange={(e) => setSpecialization(e.target.value)}
               className="flex-1 sm:flex-none rounded-xl border border-slate-200 bg-slate-50
                          px-3 py-2 text-xs text-slate-700 outline-none
-                         focus:border-[#274760]/40 min-w-[150px]"
+                         focus:border-[#274760]/40 min-w-37.5"
             >
               <option value="">All specializations</option>
               {uniqueSpecializations.map((s) => <option key={s} value={s}>{s}</option>)}
@@ -149,7 +149,7 @@ const Doctors = () => {
               onChange={(e) => setCity(e.target.value)}
               className="flex-1 sm:flex-none rounded-xl border border-slate-200 bg-slate-50
                          px-3 py-2 text-xs text-slate-700 outline-none
-                         focus:border-[#274760]/40 min-w-[130px]"
+                         focus:border-[#274760]/40 min-w-32.5"
             >
               <option value="">All cities</option>
               {uniqueCities.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -191,7 +191,7 @@ const Doctors = () => {
         {error && (
           <div className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4
                           text-sm text-red-700 mb-6 flex items-center gap-3">
-            <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <svg className="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1
                 0 10-2 0v4a1 1 0 002 0V5zm-1 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
             </svg>
@@ -255,7 +255,7 @@ const Doctors = () => {
             </div>
             <button
               onClick={() => navigate("/patient-login")}
-              className="flex-shrink-0 bg-[#274760] text-white text-sm font-semibold
+              className="shrink-0 bg-[#274760] text-white text-sm font-semibold
                          px-7 py-3 rounded-2xl hover:bg-[#1a3448] transition-colors"
             >
               Get Started →

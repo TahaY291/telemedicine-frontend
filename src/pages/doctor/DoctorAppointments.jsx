@@ -8,15 +8,9 @@ import {
 import VideoCall from "../../components/doctorComponent/VideoCall.jsx";
 import { useAuth } from "../../context/AuthContext.jsx";
 import AppointmentCard from '../../components/doctorComponent/AppointmentCard.jsx'
+import Spinner from "../../components/shared/Spinner.jsx";
+import ErrorBanner from "../../components/shared/ErrorBanner.jsx";
 
-const STATUS_META = {
-  pending: { label: "Pending", color: "bg-amber-50   text-amber-700  border-amber-100" },
-  approved: { label: "Approved", color: "bg-emerald-50 text-emerald-700 border-emerald-100" },
-  rescheduled: { label: "Rescheduled", color: "bg-blue-50    text-blue-700   border-blue-100" },
-  cancelled: { label: "Cancelled", color: "bg-red-50     text-red-700    border-red-100" },
-  completed: { label: "Completed", color: "bg-slate-100  text-slate-600  border-slate-200" },
-  expired: { label: "Expired", color: "bg-orange-50  text-orange-700 border-orange-200" }, // ← ADD
-};
 
 const TAB_ORDER = ["pending", "approved", "rescheduled", "cancelled", "completed", "expired"];
 const TAB_ICONS = {
@@ -160,15 +154,13 @@ const DoctorAppointments = () => {
 
         {/* Error */}
         {error && (
-          <div className="flex items-start gap-3 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
-            <FiAlertCircle size={16} className="mt-0.5 shrink-0" /> {error}
-          </div>
+          <ErrorBanner error={error}  />
         )}
 
         {/* Loading */}
         {loading ? (
           <div className="rounded-2xl border border-slate-200 bg-white p-10 flex items-center justify-center gap-3">
-            <div className="w-5 h-5 rounded-full border-2 border-slate-200 border-t-[#274760] animate-spin" />
+            <Spinner/>
             <p className="text-sm text-slate-500 font-medium">Loading appointments…</p>
           </div>
 
