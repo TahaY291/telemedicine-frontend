@@ -166,7 +166,7 @@ const PatientDoctorDetail = () => {
           TOP HERO — name, photo, stats all in one row
       ══════════════════════════════════════════════ */}
       <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
-        <div className="h-1.5 bg-gradient-to-r from-[#274760] to-[#3a7ca5]" />
+        <div className="h-1.5 bg-linear-to-r from-[#274760] to-[#3a7ca5]" />
         <div className="p-6">
           <div className="flex flex-col sm:flex-row gap-5">
 
@@ -289,7 +289,7 @@ const PatientDoctorDetail = () => {
           BOOKING FORM — clean, not inside a card stack
       ══════════════════════════════════════════════ */}
       <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
-        <div className="h-1 bg-gradient-to-r from-[#274760] to-[#3a7ca5]" />
+        <div className="h-1 bg-linear-to-r from-[#274760] to-[#3a7ca5]" />
         <div className="p-6">
 
           {/* Form header */}
@@ -364,7 +364,7 @@ const PatientDoctorDetail = () => {
 
                 <div>
                   {availableSlotsForDate.length > 0 ? (
-                    <div className="grid grid-cols-2 gap-2 max-h-[168px] overflow-y-auto pr-0.5">
+                    <div className="grid grid-cols-2 gap-2 max-h-42 overflow-y-auto pr-0.5">
                       {availableSlotsForDate.map(s => (
                         <button key={s} type="button" onClick={() => setTimeSlot(s)}
                           className={[
@@ -379,7 +379,7 @@ const PatientDoctorDetail = () => {
                     </div>
                   ) : (
                     <div className={[
-                      "h-full min-h-[44px] flex items-center rounded-xl border px-3.5 py-3 text-sm",
+                      "h-full min-h-11 flex items-center rounded-xl border px-3.5 py-3 text-sm",
                       !appointmentDate
                         ? "border-slate-100 bg-slate-50 text-slate-400"
                         : "border-red-100 bg-red-50 text-red-400",
