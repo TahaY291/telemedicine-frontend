@@ -64,6 +64,7 @@ const PatientAuth = ({ mode = 'login', forcedRole }) => {
         type: 'error',
         text: err.response?.data?.message || 'Something went wrong'
       });
+      console.log(err.response);
     } finally {
       setLoading(false);
     }

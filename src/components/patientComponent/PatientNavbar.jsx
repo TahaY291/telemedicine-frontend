@@ -102,7 +102,9 @@ const PatientNavbar = () => {
             className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 hover:border-[#274760]/30 hover:text-[#274760] transition-colors"
             aria-label="Notifications"
           >
+            <Link to="/patient/notifications" className="absolute inset-0" />
             <FiBell size={16} />
+            <Link/>
             <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-white" />
           </button>
 
@@ -118,7 +120,7 @@ const PatientNavbar = () => {
                 {initials}
               </div>
               <div className="hidden sm:flex flex-col leading-tight">
-                <span className="text-xs font-semibold text-[#274760] max-w-[120px] truncate">
+                <span className="text-xs font-semibold text-[#274760] max-w-30 truncate">
                   {displayName}
                 </span>
                 <span className="text-[10px] font-medium uppercase tracking-[0.16em] text-[#274760]/50">
