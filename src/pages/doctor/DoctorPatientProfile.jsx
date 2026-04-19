@@ -513,7 +513,7 @@ const DoctorPatientProfile = () => {
           HERO CARD
       ══════════════════════════════════════════ */}
             <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
-                <div className="h-1.5 bg-gradient-to-r from-[#274760] to-[#3a7ca5]" />
+                <div className="h-1.5 bg-linear-to-r from-[#274760] to-[#3a7ca5]" />
                 <div className="p-6 flex flex-col sm:flex-row gap-5">
 
                     {/* Avatar */}
