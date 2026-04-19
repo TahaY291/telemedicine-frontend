@@ -71,7 +71,7 @@ const NotificationRow = ({ notification, onMarkRead, onDelete }) => {
       )}
 
       {/* icon circle */}
-      <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center
+      <div className={`shrink-0 w-10 h-10 rounded-full flex items-center
                        justify-center border ${cfg.badge}`}>
         <CalendarIcon />
       </div>
@@ -92,7 +92,7 @@ const NotificationRow = ({ notification, onMarkRead, onDelete }) => {
       </div>
 
       {/* action buttons — visible on hover */}
-      <div className="flex-shrink-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="shrink-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
         {!notification.isRead && (
           <button
             onClick={() => onMarkRead(notification._id)}
@@ -119,7 +119,7 @@ const NotificationRow = ({ notification, onMarkRead, onDelete }) => {
 // ─── skeleton loader ───────────────────────────────────────────────────────────
 const SkeletonRow = () => (
   <div className="flex items-start gap-4 px-5 py-4 rounded-2xl border border-slate-100 bg-white animate-pulse">
-    <div className="w-10 h-10 rounded-full bg-slate-100 flex-shrink-0" />
+    <div className="w-10 h-10 rounded-full bg-slate-100 shrink-0" />
     <div className="flex-1 space-y-2 pt-1">
       <div className="h-3 w-24 bg-slate-100 rounded-full" />
       <div className="h-3 w-3/4 bg-slate-100 rounded-full" />

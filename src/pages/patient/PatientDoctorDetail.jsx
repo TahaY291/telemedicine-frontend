@@ -6,6 +6,8 @@ import {
   FiVideo, FiMic, FiMessageSquare, FiCalendar, FiCheck,
   FiAlertCircle, FiCheckCircle, FiXCircle, FiSave,
 } from "react-icons/fi";
+import Spinner from "../../components/shared/Spinner.jsx";
+import ErrorBanner from "../../components/shared/ErrorBanner.jsx";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -124,7 +126,7 @@ const PatientDoctorDetail = () => {
   // ── Loading ────────────────────────────────────────────────────────────────
   if (loading) return (
     <div className="max-w-5xl mx-auto px-4 py-10 flex items-center justify-center gap-3">
-      <div className="w-5 h-5 rounded-full border-2 border-slate-200 border-t-[#274760] animate-spin" />
+      <Spinner/>
       <p className="text-sm text-slate-500 font-medium">Loading doctor details…</p>
     </div>
   );
@@ -148,7 +150,7 @@ const PatientDoctorDetail = () => {
   const doctorImage = doctor?.doctorImage;
   const certificateImage = doctor?.certificateImage;
   const availabilitySlots = doctor?.availabilitySlots || [];
-  const initials = name.split(" ").filter(Boolean).slice(0, 2).map(s => s[0]?.toUpperCase()).join("") || "DR";
+  const initials = getInitials(name);
   const availableDays = availabilitySlots.filter(s => s.isAvailable);
 
   return (
@@ -313,9 +315,7 @@ const PatientDoctorDetail = () => {
             </div>
           )}
           {error && (
-            <div className="mb-5 flex items-start gap-2 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
-              <FiAlertCircle size={14} className="mt-0.5 shrink-0" /> {error}
-            </div>
+            <ErrorBanner error={error} />
           )}
 
           <form onSubmit={submitAppointment} className="space-y-6">
@@ -405,7 +405,7 @@ const PatientDoctorDetail = () => {
             <button type="submit" disabled={submitting || !timeSlot}
               className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#274760] text-white text-sm font-bold py-3.5 hover:bg-[#1e364a] disabled:opacity-60 active:scale-[0.98] transition-all shadow-sm shadow-[#274760]/20">
               {submitting
-                ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Sending request…</>
+                ? <><Spinner /> Sending request…</>
                 : "Request Appointment"
               }
             </button>

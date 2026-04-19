@@ -7,17 +7,9 @@ import {
   FiChevronDown,
   FiExternalLink,
 } from "react-icons/fi";
-
-const formatDate = (value) => {
-  if (!value) return "—";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-};
+import { formatDate } from "../../utils/commonUtils.js";
+import Spinner from "../../components/shared/Spinner.jsx";
+import ErrorBanner from "../../components/shared/ErrorBanner.jsx";
 
 const formatTime = (timeSlot) => timeSlot || "—";
 
@@ -114,15 +106,13 @@ const PatientRecords = () => {
       </div>
 
       {error && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error}
-        </div>
+        <ErrorBanner error={error} />
       )}
 
       {loading ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-6">
           <div className="flex items-center gap-3 text-[#274760]">
-            <span className="w-5 h-5 border-2 border-[#274760]/30 border-t-[#274760] rounded-full animate-spin" />
+            <Spinner/>
             <span className="text-sm font-medium">Loading records...</span>
           </div>
         </div>

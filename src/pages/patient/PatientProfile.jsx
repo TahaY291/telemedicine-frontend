@@ -2,9 +2,11 @@ import React, { useEffect, useMemo, useState } from "react";
 import api from "../../api/axios.js";
 import { useAuth } from "../../context/AuthContext.jsx";
 import {
-  FiEdit2, FiRefreshCw, FiSave, FiUser, FiUpload,
+  FiEdit2, FiSave, FiUser, FiUpload,
   FiPhone, FiMapPin, FiActivity, FiAlertCircle, FiCheck, FiX
 } from "react-icons/fi";
+import { Field, InfoRow, Tag, inputCls } from "../../components/patientComponent/profile/ProfileComp.jsx";
+import RefreshBanner from "../../components/shared/RefreshBanner.jsx";
 
 
 const TABS = ["Personal", "Medical", "Emergency"];
@@ -15,6 +17,8 @@ const emptyForm = {
   medicalNotes: "", emergencyContactName: "", emergencyContactPhone: "",
   emergencyRelation: "",
 };
+import { formatDate, getInitials } from "../../utils/commonUtils.js";
+import Spinner from "../../components/shared/Spinner.jsx";
 
 const isoFromDateInput = (v) => {
   if (!v) return undefined;
@@ -31,51 +35,7 @@ const dateInputFromAny = (v) => {
 const safeJoin = (arr) => (Array.isArray(arr) ? arr.filter(Boolean).join(", ") : "");
 const splitList = (v) => (v ? v.split(",").map((s) => s.trim()).filter(Boolean) : []);
 
-const formatDate = (v) => {
-  if (!v) return "—";
-  const d = new Date(v);
-  return Number.isNaN(d.getTime()) ? "—" : d.toLocaleDateString("en-PK", { day: "numeric", month: "short", year: "numeric" });
-};
 
-const inputCls =
-  "w-full px-3.5 py-2.5 rounded-lg border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#274760]/30 focus:border-[#274760] disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed transition-all";
-
-const Field = ({ label, hint, children, span2 = false }) => (
-  <div className={span2 ? "col-span-2" : ""}>
-    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
-      {label}{hint && <span className="normal-case font-normal text-slate-400 ml-1">{hint}</span>}
-    </label>
-    {children}
-  </div>
-);
-
-const InfoRow = ({ icon: Icon, label, value }) => (
-  <div className="flex items-start gap-3 py-3.5 border-b border-slate-100 last:border-0">
-    <div className="w-8 h-8 rounded-lg bg-[#274760]/8 flex items-center justify-center shrink-0 mt-0.5">
-      <Icon size={14} className="text-[#274760]" />
-    </div>
-    <div className="min-w-0 flex-1">
-      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{label}</p>
-      <p className="text-[15px] font-semibold text-slate-800 mt-1 wrap-break-word leading-snug">
-        {value || <span className="text-slate-300 font-normal text-sm">Not provided</span>}
-      </p>
-    </div>
-  </div>
-);
-
-const Tag = ({ children, color = "blue" }) => {
-  const colors = {
-    blue: "bg-[#274760]/8 text-[#274760] border-[#274760]/15",
-    red: "bg-red-50 text-red-700 border-red-100",
-    amber: "bg-amber-50 text-amber-700 border-amber-100",
-    green: "bg-emerald-50 text-emerald-700 border-emerald-100",
-  };
-  return (
-    <span className={`inline-block px-3 py-1.5 rounded-lg border text-xs font-bold mr-1.5 mb-1.5 ${colors[color]}`}>
-      {children}
-    </span>
-  );
-};
 
 
 const PatientProfile = () => {
@@ -105,9 +65,7 @@ const PatientProfile = () => {
     profile?.personalInfo?.profileImage ||
     null;
 
-  const initials = (headlineName || "P")
-    .split(" ").filter(Boolean).slice(0, 2)
-    .map((s) => s[0]?.toUpperCase()).join("");
+  const initials = getInitials(headlineName);
 
 
   const hydrateForm = (p) => setForm({
@@ -263,20 +221,7 @@ const PatientProfile = () => {
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 font-[system-ui]">
 
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800 tracking-tight">My Profile</h1>
-          <p className="text-sm text-slate-400 mt-0.5">Manage your health & contact information</p>
-        </div>
-        <button
-          onClick={fetchProfile}
-          disabled={initialLoading || saving}
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-500 text-sm font-medium hover:bg-slate-50 disabled:opacity-50 transition-colors"
-        >
-          <FiRefreshCw size={13} className={initialLoading ? "animate-spin" : ""} />
-          Refresh
-        </button>
-      </div>
+    <RefreshBanner initialLoading={initialLoading} saving={saving} onClick={fetchProfile} tabName={"My Profile"} text={"Manage your health & contact information"} />
 
       {message.text && (
         <div className={[
@@ -293,7 +238,7 @@ const PatientProfile = () => {
 
       {initialLoading ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-10 flex items-center justify-center gap-3">
-          <div className="w-5 h-5 rounded-full border-2 border-slate-200 border-t-[#274760] animate-spin" />
+          <Spinner/>
           <p className="text-sm text-slate-500 font-medium">Loading your profile…</p>
         </div>
       ) : (
@@ -312,7 +257,7 @@ const PatientProfile = () => {
                 )}
                 {uploadingImage && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                    <span className="w-5 h-5 border-2 border-white/60 border-t-white rounded-full animate-spin" />
+                    <Spinner/>
                   </div>
                 )}
                 {!isNew && !uploadingImage && (
@@ -508,7 +453,7 @@ const PatientProfile = () => {
                   <button type="submit" disabled={saving}
                     className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#274760] text-white text-sm font-semibold hover:bg-[#1e364a] disabled:opacity-60 transition-colors">
                     {saving ? (
-                      <><span className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin" /> Saving…</>
+                      <><Spinner /> Saving…</>
                     ) : (
                       <><FiSave size={14} /> {isNew ? "Create Profile" : "Save Changes"}</>
                     )}

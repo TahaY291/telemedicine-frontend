@@ -167,7 +167,7 @@ const PatientDetailPanel = ({ patientId, onClose }) => {
 
   const { patient, consultations = [], prescriptions = [] } = data || {};
   const name     = patient?.user?.username || "Patient";
-  const initials = name.split(" ").filter(Boolean).slice(0, 2).map(s => s[0]?.toUpperCase()).join("") || "P";
+  const initials = getInitials(name);
 
   const TABS = [
     { id: "info",          label: "Medical",       icon: FiHeart,    count: null },
@@ -238,9 +238,7 @@ const PatientDetailPanel = ({ patientId, onClose }) => {
             {[1,2,3].map(i => <div key={i} className="h-20 bg-white rounded-2xl border border-slate-100 animate-pulse" />)}
           </div>
         ) : error ? (
-          <div className="flex items-start gap-3 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
-            <FiAlertCircle size={15} className="mt-0.5 shrink-0" /> {error}
-          </div>
+          <ErrorBanner error={error} />
         ) : (
           <div className="space-y-3">
 

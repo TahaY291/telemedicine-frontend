@@ -7,6 +7,8 @@ import {
   FiCheckCircle, FiXCircle, FiUpload, FiAlertCircle,
   FiCheck, FiImage,
 } from "react-icons/fi";
+import { getDisplayName, getInitials } from "../../utils/commonUtils.js";
+import Spinner from "../../components/shared/Spinner.jsx";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -90,13 +92,11 @@ const DoctorProfile = () => {
   const isNew       = !profileExists;
   const formEnabled = editing || isNew;
 
-  const displayName = useMemo(() => user?.username || "Doctor", [user?.username]);
+  const displayName = getDisplayName(user,  "Doctor") 
 
   const avatarSrc = doctorPreview || profile?.doctorImage || null;
 
-  const initials = displayName
-    .split(" ").filter(Boolean).slice(0, 2)
-    .map((s) => s[0]?.toUpperCase()).join("");
+  const initials = getInitials(displayName);
 
   const availableDays = slots.filter((s) => s.isAvailable);
 
@@ -229,7 +229,7 @@ const DoctorProfile = () => {
   if (loading) {
     return (
       <div className="rounded-2xl border border-slate-200 bg-white p-10 flex items-center justify-center gap-3">
-        <div className="w-5 h-5 rounded-full border-2 border-slate-200 border-t-[#274760] animate-spin" />
+        <Spinner/>
         <p className="text-sm text-slate-500 font-medium">Loading profile…</p>
       </div>
     );
@@ -638,7 +638,7 @@ const DoctorProfile = () => {
                   <button type="submit" disabled={saving}
                     className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#274760] text-white px-4 py-3 text-sm font-bold hover:bg-[#1e364a] disabled:opacity-60 transition-colors">
                     {saving ? (
-                      <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Saving…</>
+                      <><Spinner/> Saving…</>
                     ) : (
                       <><FiSave size={15} /> {isNew ? "Create Profile" : "Save Changes"}</>
                     )}

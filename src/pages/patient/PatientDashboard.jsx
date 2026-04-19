@@ -10,6 +10,13 @@ import {
   FiCheckCircle,
   FiAlertCircle,
 } from "react-icons/fi";
+import { getDisplayName } from "../../utils/DashboardUtils.js";
+import { getInitials } from "../../utils/commonUtils.js";
+import { todayLabel } from "../../utils/DashboardUtils.js";
+import { formatTime } from "../../utils/commonUtils.js";
+import { formatDate } from "../../utils/commonUtils.js";
+import Spinner from "../../components/shared/Spinner.jsx";
+import ErrorBanner from "../../components/shared/ErrorBanner.jsx";
 
 const PatientDashboard = () => {
   const { user } = useAuth();
@@ -19,30 +26,9 @@ const PatientDashboard = () => {
   const [appointments, setAppointments] = useState([]);
   const [consultations, setConsultations] = useState([]);
 
-  const displayName = useMemo(
-    () => user?.username || "Patient",
-    [user?.username]
-  );
+  const displayName = getDisplayName(user, "Patient");
 
-  const initials = useMemo(
-    () =>
-      (displayName || "P")
-        .split(" ")
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((s) => s[0]?.toUpperCase())
-        .join(""),
-    [displayName]
-  );
-
-  const today = useMemo(() => {
-    const now = new Date();
-    return now.toLocaleDateString(undefined, {
-      weekday: "long",
-      month: "short",
-      day: "numeric",
-    });
-  }, []);
+  const initials = getInitials(displayName);
 
   const computeStats = () => {
     const total = appointments.length;
@@ -112,18 +98,6 @@ const PatientDashboard = () => {
     fetchDashboard();
   }, []);
 
-  const formatDate = (value) => {
-    if (!value) return "—";
-    const d = new Date(value);
-    if (Number.isNaN(d.getTime())) return "—";
-    return d.toLocaleDateString(undefined, {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-  };
-
-  const formatTime = (timeSlot) => timeSlot || "—";
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -143,7 +117,7 @@ const PatientDashboard = () => {
                   {displayName}
                 </h2>
                 <p className="text-xs mt-1 text-white/80">
-                  Today is <span className="font-medium">{today}</span>. Manage
+                  Today is <span className="font-medium">{todayLabel}</span>. Manage
                   your health at a glance.
                 </p>
               </div>
@@ -230,14 +204,11 @@ const PatientDashboard = () => {
 
       {/* Error / loading */}
       {error && (
-        <div className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700 flex items-start gap-2">
-          <FiAlertCircle className="mt-0.5" />
-          <span>{error}</span>
-        </div>
+        <ErrorBanner error={error} />
       )}
       {loading && (
         <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 flex items-center gap-2">
-          <span className="w-4 h-4 border-2 border-slate-300 border-t-[#274760] rounded-full animate-spin" />
+          <Spinner/>
           <span>Loading your latest activity…</span>
         </div>
       )}
