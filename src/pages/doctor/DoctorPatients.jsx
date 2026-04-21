@@ -6,7 +6,7 @@ import {
   FiDroplet, FiMapPin, FiPhone, FiHeart, FiShield,
   FiChevronRight,
 } from "react-icons/fi";
-
+import { getInitials } from "../../utils/commonUtils.js";
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const fmt = (v) => {
