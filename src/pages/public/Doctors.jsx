@@ -10,6 +10,8 @@ const Doctors = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
+  const isLoggedIn = !!user; // ← single flag used throughout
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [doctors, setDoctors] = useState([]);
@@ -73,61 +75,97 @@ const Doctors = () => {
   return (
     <div className="min-h-screen bg-[#f4f8fb]">
 
-      {/* ── Hero Banner — matches AppointmentBanner theme ── */}
-      <section className="max-w-8xl mx-auto px-6 md:px-16 lg:px-24
-                          flex flex-col lg:flex-row items-center justify-between
-                          hero-bg-clr min-h-[55vh] pt-24 pb-10 lg:pb-0">
+      {/* ── Hero Banner — hidden when logged in ── */}
+      {!isLoggedIn && (
+        <section className="max-w-8xl mx-auto px-6 md:px-16 lg:px-24
+                            flex flex-col lg:flex-row items-center justify-between
+                            hero-bg-clr min-h-[55vh] pt-24 pb-10 lg:pb-0">
 
-        {/* left: text + search */}
-        <div className="w-full lg:basis-[50%] text-center lg:text-left">
-          <p className="text-[#4a90b8] text-xs font-semibold tracking-[0.2em] uppercase mb-3">
-            Our Medical Team
-          </p>
-          <h1 className="font-bold text-3xl sm:text-4xl md:text-5xl text-[#274760]">
-            Find the Right Doctor
-            <span className="block text-[#4a90b8]">for Your Care</span>
-          </h1>
-          <p className="text-base sm:text-lg text-gray-600 mt-4 max-w-md mx-auto lg:mx-0">
-            Browse our team of qualified, available doctors. Filter by specialization
-            or city to find the perfect match for your needs.
-          </p>
+          {/* left: text + search */}
+          <div className="w-full lg:basis-[50%] text-center lg:text-left">
+            <p className="text-[#4a90b8] text-xs font-semibold tracking-[0.2em] uppercase mb-3">
+              Our Medical Team
+            </p>
+            <h1 className="font-bold text-3xl sm:text-4xl md:text-5xl text-[#274760]">
+              Find the Right Doctor
+              <span className="block text-[#4a90b8]">for Your Care</span>
+            </h1>
+            <p className="text-base sm:text-lg text-gray-600 mt-4 max-w-md mx-auto lg:mx-0">
+              Browse our team of qualified, available doctors. Filter by specialization
+              or city to find the perfect match for your needs.
+            </p>
 
-          {/* search input */}
-          <div className="relative mt-6 max-w-sm mx-auto lg:mx-0">
-            <svg
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"
-              fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <path d="M21 21l-4.35-4.35" />
-            </svg>
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by name or specialty…"
-              className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-slate-200
-                         text-slate-700 placeholder:text-slate-400 text-sm outline-none
-                         focus:border-[#274760]/40 shadow-sm transition-colors"
+            {/* search input */}
+            <div className="relative mt-6 max-w-sm mx-auto lg:mx-0">
+              <svg
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"
+                fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <path d="M21 21l-4.35-4.35" />
+              </svg>
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by name or specialty…"
+                className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-slate-200
+                           text-slate-700 placeholder:text-slate-400 text-sm outline-none
+                           focus:border-[#274760]/40 shadow-sm transition-colors"
+              />
+            </div>
+          </div>
+
+          {/* right: image */}
+          <div className="w-full lg:basis-[50%] relative mt-10 lg:mt-0 flex justify-center">
+            <img
+              src={appointment_img}
+              alt="Find a Doctor"
+              className="w-110 max-w-md lg:max-w-full h-110 rounded-lg relative top-0"
             />
           </div>
-        </div>
-
-        {/* right: image */}
-        <div className="w-full lg:basis-[50%] relative mt-10 lg:mt-0 flex justify-center">
-          <img
-            src={appointment_img}
-            alt="Find a Doctor"
-            className="w-110 max-w-md lg:max-w-full h-110 rounded-lg relative top-0"
-          />
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ── Filters bar ── */}
       <div className="max-w-6xl mx-auto px-6">
-        <div className="relative -mt-5 z-10 bg-white rounded-2xl shadow-md border border-slate-100
-                        px-5 py-4 flex flex-wrap gap-3 items-center justify-between">
-          <p className="text-xs text-slate-500 font-medium hidden sm:block">Refine results:</p>
+        <div className={`relative z-10 bg-white rounded-2xl shadow-md border border-slate-100
+                        px-5 py-4 flex flex-wrap gap-3 items-center justify-between
+                        ${!isLoggedIn ? "-mt-5" : "mt-6"}`}>
+
+          {/* When logged in, show a simple page title instead of "Refine results" */}
+          {isLoggedIn ? (
+            <div>
+              <h1 className="text-lg font-bold text-[#274760]">Find a Doctor</h1>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Filter by specialization or city to find the right match.
+              </p>
+            </div>
+          ) : (
+            <p className="text-xs text-slate-500 font-medium hidden sm:block">Refine results:</p>
+          )}
+
+          {/* Search input — shown inline in filter bar when logged in */}
+          {isLoggedIn && (
+            <div className="relative w-full sm:w-64">
+              <svg
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none"
+                fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <path d="M21 21l-4.35-4.35" />
+              </svg>
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by name or specialty…"
+                className="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-200 bg-slate-50
+                           text-xs text-slate-700 placeholder:text-slate-400 outline-none
+                           focus:border-[#274760]/40 transition-colors"
+              />
+            </div>
+          )}
 
           <form
             onSubmit={handleFilterSubmit}
@@ -242,8 +280,8 @@ const Doctors = () => {
         )}
       </div>
 
-      {/* ── CTA strip ── */}
-      {!loading && filtered.length > 0 && (
+      {/* ── CTA strip — hidden when logged in ── */}
+      {!isLoggedIn && !loading && filtered.length > 0 && (
         <div className="bg-white border-t border-slate-100 py-10">
           <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row
                           items-center justify-between gap-4">

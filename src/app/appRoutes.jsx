@@ -21,11 +21,8 @@ import PatientDoctorDetail from "../pages/patient/PatientDoctorDetail.jsx";
 import DoctorDashboard from "../pages/doctor/DoctorDashboard.jsx";
 import DoctorProfile from "../pages/doctor/DoctorProfile.jsx";
 import DoctorAppointments from "../pages/doctor/DoctorAppointments.jsx";
-import DoctorConsultations from "../pages/doctor/DoctorConsultations.jsx";
-import DoctorPrescriptions from "../pages/doctor/DoctorPrescriptions.jsx";
 import DoctorPatients from "../pages/doctor/DoctorPatients.jsx";
 import DoctorNotifications from "../pages/doctor/DoctorNotifications.jsx";
-import DoctorReports from "../pages/doctor/DoctorReports.jsx";
 
 import VerifyEmail from "../pages/shared/VerifyEmail.jsx";
 import ChangePassword from "../pages/shared/ChangePassword.jsx";
@@ -117,11 +114,8 @@ const AppRoutes = () => {
         <Route path="/doctor" element={<DoctorLayout />}>
           <Route index element={<DoctorDashboard />} />
           <Route path="appointments" element={<DoctorAppointments />} />
-          <Route path="consultations" element={<DoctorConsultations />} />
-          <Route path="prescriptions" element={<DoctorPrescriptions />} />
           <Route path="patients" element={<DoctorPatients />} />
           <Route path="notifications" element={<DoctorNotifications />} />
-          <Route path="reports" element={<DoctorReports />} />
           <Route path="verify-email" element={<VerifyEmail />} />
           <Route path="change-password" element={<ChangePassword />} />
           <Route path="doctors" element={<Doctors />} />

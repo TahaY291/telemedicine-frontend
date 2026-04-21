@@ -8,7 +8,7 @@ import {
 } from "react-icons/fi";
 import Spinner from "../../components/shared/Spinner.jsx";
 import ErrorBanner from "../../components/shared/ErrorBanner.jsx";
-
+import { getInitials } from "../../utils/commonUtils.js";
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const pad2 = (n) => String(n).padStart(2, "0");

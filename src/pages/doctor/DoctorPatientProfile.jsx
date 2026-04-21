@@ -10,7 +10,7 @@ import {
 } from "react-icons/fi";
 import { formatDate } from "../../utils/commonUtils.js";
 import Spinner from "../../components/shared/Spinner.jsx";
-
+import { getInitials } from "../../utils/commonUtils.js";
 const calcAge = (dob) => {
     if (!dob) return null;
     const diff = Date.now() - new Date(dob).getTime();
