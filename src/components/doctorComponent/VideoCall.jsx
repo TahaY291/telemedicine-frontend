@@ -200,7 +200,7 @@ const VideoCall = ({
     return (
       <div className="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center p-4">
         <div className="w-full max-w-sm bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden shadow-2xl">
-          <div className="h-1 bg-gradient-to-r from-emerald-500 to-teal-500" />
+          <div className="h-1 bg-linear-to-r from-emerald-500 to-teal-500" />
           <div className="p-6 text-center">
             <div className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center mx-auto mb-4">
               <span className="text-2xl">💳</span>
