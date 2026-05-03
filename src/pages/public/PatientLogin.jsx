@@ -4,10 +4,11 @@ import axios from 'axios';
 import { useContext } from 'react';
 import { AppContext } from '../../context/Context.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
+import api from '../../api/axios.js';
 
 const PatientAuth = ({ mode = 'login', forcedRole }) => {
   const { role } = useContext(AppContext);
-  const { setUser  } = useAuth();
+  const { setUser } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ username: '', email: '', password: '' });
   const [loading, setLoading] = useState(false);
@@ -30,44 +31,27 @@ const PatientAuth = ({ mode = 'login', forcedRole }) => {
       mode === 'login'
         ? { email: formData.email, password: formData.password }
         : { ...formData, role: accountRole };
+try {
+  const { data } = await api.post(endpoint, payload);
 
-    try {
-      const { data } = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}${endpoint}`,
-        payload,
-        {
-          withCredentials: true,
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-      
-      setMessage({ type: 'success', text: data.message });
-      console.log("Auth response:", data.data.user.role);
-      console.log("Auth response:", data.message);
-      
-      if (mode === 'login') {
-        setUser(data.data.user);
-      }
-      
-      
-      if (mode === 'signup') {
-        const loginPath = accountRole === 'doctor' ? '/doctor-login' : '/patient-login';
-        setTimeout(() => navigate(loginPath), 1500);
-      } else {
-        setTimeout(() => navigate(`/${data.data.user.role}`), 1500);
-      }
-      
-    } catch (err) {
-      setMessage({
-        type: 'error',
-        text: err.response?.data?.message || 'Something went wrong'
-      });
-      console.log(err.response);
-    } finally {
-      setLoading(false);
-    }
+  setMessage({ type: 'success', text: data.message });
+
+  if (mode === 'login') {
+    setUser(data.data.user);
+    setTimeout(() => navigate(`/${data.data.user.role}`), 1500);
+  } else {
+    const loginPath = accountRole === 'doctor' ? '/doctor-login' : '/patient-login';
+    setTimeout(() => navigate(loginPath), 1500);
+  }
+
+} catch (err) {
+  setMessage({
+    type: 'error',
+    text: err.response?.data?.message || err.message || 'Something went wrong'
+  });
+} finally {
+  setLoading(false); // ✅ this was missing!
+}
   };
 
   return (
@@ -83,11 +67,10 @@ const PatientAuth = ({ mode = 'login', forcedRole }) => {
         </div>
 
         {message.text && (
-          <div className={`mb-4 p-3 rounded-lg text-sm border ${
-            message.type === 'error'
+          <div className={`mb-4 p-3 rounded-lg text-sm border ${message.type === 'error'
               ? 'bg-red-50 text-red-600 border-red-100'
               : 'bg-green-50 text-green-600 border-green-100'
-          }`}>
+            }`}>
             {message.text}
           </div>
         )}

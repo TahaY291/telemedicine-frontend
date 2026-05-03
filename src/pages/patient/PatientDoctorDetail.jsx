@@ -1,22 +1,22 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../../api/axios.js";
 import {
-  FiArrowLeft, FiMapPin, FiAward, FiClock, FiDollarSign,
-  FiVideo, FiMic, FiMessageSquare, FiCalendar, FiCheck,
-  FiAlertCircle, FiCheckCircle, FiXCircle, FiSave,
+  FiArrowLeft, FiMapPin, FiClock, FiDollarSign,
+  FiCalendar, FiCheck, FiAlertCircle, FiCheckCircle, FiXCircle,
 } from "react-icons/fi";
 import Spinner from "../../components/shared/Spinner.jsx";
 import ErrorBanner from "../../components/shared/ErrorBanner.jsx";
 import { getInitials } from "../../utils/commonUtils.js";
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const pad2 = (n) => String(n).padStart(2, "0");
 
 const to12h = (h, m) => {
   const ampm = h >= 12 ? "PM" : "AM";
-  const hh = ((h + 11) % 12) + 1;
-  return `${hh}:${pad2(m)} ${ampm}`;
+  const hh   = ((h + 11) % 12) + 1;          // 1-12, no leading zero
+  return `${hh}:${pad2(m)} ${ampm}`;          // e.g. "9:00 AM", "12:30 PM"
 };
 
 const parseHHMM = (s) => {
@@ -30,16 +30,46 @@ const buildTimeSlots = (startTime, endTime, stepMinutes = 30) => {
   const e = parseHHMM(endTime);
   if (!s || !e) return [];
   const start = s.hh * 60 + s.mm;
-  const end = e.hh * 60 + e.mm;
+  const end   = e.hh * 60 + e.mm;
   if (end <= start) return [];
   const slots = [];
   for (let t = start; t + stepMinutes <= end; t += stepMinutes) {
     const aH = Math.floor(t / 60), aM = t % 60;
-    const b = t + stepMinutes;
+    const b  = t + stepMinutes;
     const bH = Math.floor(b / 60), bM = b % 60;
     slots.push(`${to12h(aH, aM)} - ${to12h(bH, bM)}`);
   }
   return slots;
+};
+
+/**
+ * Normalize a 12-hour time string to a canonical form for safe comparison.
+ *
+ * Handles both formats that can appear:
+ *   "9:00 AM"  →  "9:00 AM"
+ *   "09:00 AM" →  "9:00 AM"   (leading zero stripped from hour)
+ *   "9:00AM"   →  "9:00 AM"   (space inserted before meridiem)
+ *
+ * We parse to integers so leading zeros can never cause a mismatch.
+ */
+const normalizeTimePart = (part) => {
+  const trimmed = part.trim();
+  const match   = trimmed.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (!match) return trimmed.toLowerCase(); // fallback: lowercase compare
+  const h    = Number(match[1]);            // strips any leading zero
+  const m    = Number(match[2]);
+  const ampm = match[3].toUpperCase();
+  return `${h}:${pad2(m)} ${ampm}`;        // "9:00 AM" — matches to12h output
+};
+
+/**
+ * Normalize a full slot label "HH:MM XM - HH:MM XM" so both sides
+ * of the comparison are in the same canonical form.
+ */
+const normalizeSlot = (slotLabel) => {
+  const parts = String(slotLabel || "").split(" - ");
+  if (parts.length !== 2) return slotLabel.trim().toLowerCase();
+  return `${normalizeTimePart(parts[0])} - ${normalizeTimePart(parts[1])}`;
 };
 
 const weekdayName = (dateStr) => {
@@ -48,14 +78,24 @@ const weekdayName = (dateStr) => {
   return Number.isNaN(d.getTime()) ? "" : d.toLocaleDateString(undefined, { weekday: "long" });
 };
 
-const DAYS_ORDER = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-const DAY_SHORT = { Monday: "Mon", Tuesday: "Tue", Wednesday: "Wed", Thursday: "Thu", Friday: "Fri", Saturday: "Sat", Sunday: "Sun" };
+/** Returns true if the slot's START time is still in the future. */
+const isSlotInFuture = (slotLabel) => {
+  const startPart = slotLabel.split(" - ")[0]?.trim();
+  if (!startPart) return true;
+  const match = startPart.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (!match) return true;
+  let h      = Number(match[1]);
+  const m    = Number(match[2]);
+  const ampm = match[3].toUpperCase();
+  if (ampm === "PM" && h !== 12) h += 12;
+  if (ampm === "AM" && h === 12) h  = 0;
+  const slotStart = new Date();
+  slotStart.setHours(h, m, 0, 0);
+  return slotStart > new Date();
+};
 
-const CONSULT_TYPES = [
-  { value: "video", label: "Video", icon: FiVideo, color: "text-blue-600   bg-blue-50   border-blue-200" },
-  { value: "audio", label: "Audio", icon: FiMic, color: "text-violet-600 bg-violet-50 border-violet-200" },
-  { value: "chat", label: "Chat", icon: FiMessageSquare, color: "text-emerald-600 bg-emerald-50 border-emerald-200" },
-];
+const DAYS_ORDER = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const DAY_SHORT  = { Monday: "Mon", Tuesday: "Tue", Wednesday: "Wed", Thursday: "Thu", Friday: "Fri", Saturday: "Sat", Sunday: "Sun" };
 
 const inputCls = "w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#274760]/20 focus:border-[#274760] transition-all";
 
@@ -63,19 +103,34 @@ const inputCls = "w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-whi
 
 const PatientDoctorDetail = () => {
   const { doctorId } = useParams();
-  const navigate = useNavigate();
+  const navigate     = useNavigate();
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [doctor, setDoctor] = useState(null);
+  const [loading,    setLoading]    = useState(true);
+  const [error,      setError]      = useState("");
+  const [doctor,     setDoctor]     = useState(null);
   const [submitting, setSubmitting] = useState(false);
-  const [success, setSuccess] = useState("");
+  const [success,    setSuccess]    = useState("");
 
   const [appointmentDate, setAppointmentDate] = useState("");
-  const [consultationType, setConsultationType] = useState("video");
-  const [timeSlot, setTimeSlot] = useState("");
-  const [reasonForVisit, setReasonForVisit] = useState("");
+  const [timeSlot,        setTimeSlot]        = useState("");
+  const [reasonForVisit,  setReasonForVisit]  = useState("");
 
+  /**
+   * bookedSlots — raw strings from the API, normalized before comparison.
+   * slotsReady  — true only after the API call for the CURRENT date resolves.
+   *               Prevents the brief window where old bookedSlots from the
+   *               previous date are still in state while the new fetch is
+   *               in-flight (Issue #3).
+   */
+  const [bookedSlots,  setBookedSlots]  = useState([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [slotsReady,   setSlotsReady]   = useState(false);
+
+  // Track the date for which bookedSlots was last fetched so we never
+  // render slots from a stale fetch (race-condition guard).
+  const fetchedForDate = useRef("");
+
+  // ── Load doctor profile ──────────────────────────────────────────────────
   const load = async () => {
     setLoading(true);
     setError("");
@@ -89,22 +144,82 @@ const PatientDoctorDetail = () => {
     }
   };
 
-  useEffect(() => { load(); }, [doctorId]); 
+  useEffect(() => { load(); }, [doctorId]);
 
+  // ── Fetch booked slots ───────────────────────────────────────────────────
+  const fetchBookedSlots = useCallback(async (date) => {
+    if (!date || !doctorId) return;
+
+    // Mark that slots are not ready for this new date yet (Issue #3 fix)
+    setSlotsReady(false);
+    setLoadingSlots(true);
+    setBookedSlots([]);          // clear stale data immediately
+    fetchedForDate.current = date;
+
+    try {
+      const { data } = await api.get("/appointments/booked-slots", {
+        params: { doctorId, date },
+      });
+
+      if (fetchedForDate.current !== date) return;
+
+      const raw = data?.data || [];
+
+      const normalized = raw.map(normalizeSlot);
+      setBookedSlots(normalized);
+
+    } catch {
+
+      if (fetchedForDate.current === date) {
+        setBookedSlots([]);   // explicit, documents the intent
+      }
+    } finally {
+      if (fetchedForDate.current === date) {
+        setLoadingSlots(false);
+        setSlotsReady(true);  // gate opens only for the matching fetch
+      }
+    }
+  }, [doctorId]);
+
+  // ── Derived values ───────────────────────────────────────────────────────
   const selectedDay = useMemo(() => weekdayName(appointmentDate), [appointmentDate]);
-  const availableSlotsForDate = useMemo(() => {
-    const daySlot = (doctor?.availabilitySlots || []).find(s => s?.day === selectedDay);
-    if (!daySlot?.isAvailable) return [];
-    return buildTimeSlots(daySlot.startTime, daySlot.endTime, 30);
-  }, [doctor?.availabilitySlots, selectedDay]);
-
-  useEffect(() => { setTimeSlot(""); }, [appointmentDate, selectedDay]);
 
   const minDate = useMemo(() => {
     const now = new Date();
     return `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`;
   }, []);
 
+  const isToday = appointmentDate === minDate;
+
+
+  const availableSlotsForDate = useMemo(() => {
+    // Issue #3 fix — don't compute until the fetch for THIS date resolved
+    if (!selectedDay || !doctor?.availabilitySlots || !slotsReady) return [];
+
+    const daySlot = doctor.availabilitySlots.find(s => s?.day === selectedDay);
+    if (!daySlot?.isAvailable) return [];
+
+    // Step 1
+    let slots = buildTimeSlots(daySlot.startTime, daySlot.endTime, 30);
+
+    // Step 2
+    if (isToday) slots = slots.filter(isSlotInFuture);
+
+    slots = slots.filter(s => !bookedSlots.includes(normalizeSlot(s)));
+
+    return slots;
+  }, [doctor?.availabilitySlots, selectedDay, isToday, bookedSlots, slotsReady]);
+
+useEffect(() => {
+    setTimeSlot("");
+    setSlotsReady(false);
+    setBookedSlots([]);
+    if (appointmentDate) {
+      fetchBookedSlots(appointmentDate);
+    }
+  }, [appointmentDate, fetchBookedSlots]);
+
+  // ── Submit ───────────────────────────────────────────────────────────────
   const submitAppointment = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -112,7 +227,11 @@ const PatientDoctorDetail = () => {
     setSuccess("");
     try {
       const { data } = await api.post("/appointments/create-appointment", {
-        doctorId, appointmentDate, timeSlot, consultationType, reasonForVisit,
+        doctorId,
+        appointmentDate,
+        timeSlot,
+        consultationType: "video",
+        reasonForVisit,
       });
       setSuccess(data?.message || "Appointment request sent!");
       navigate("/patient/appointments?status=pending", { replace: false });
@@ -123,10 +242,10 @@ const PatientDoctorDetail = () => {
     }
   };
 
-  // ── Loading ────────────────────────────────────────────────────────────────
+  // ── Loading / error guards ───────────────────────────────────────────────
   if (loading) return (
     <div className="max-w-5xl mx-auto px-4 py-10 flex items-center justify-center gap-3">
-      <Spinner/>
+      <Spinner />
       <p className="text-sm text-slate-500 font-medium">Loading doctor details…</p>
     </div>
   );
@@ -140,36 +259,38 @@ const PatientDoctorDetail = () => {
     </div>
   );
 
-  const name = doctor?.userId?.username || "Doctor";
-  const specialization = doctor?.specialization || "";
-  const qualifications = doctor?.qualifications || "";
-  const experience = doctor?.experience;
-  const fee = doctor?.consultationFee;
-  const city = doctor?.location?.city;
-  const address = doctor?.location?.address;
-  const doctorImage = doctor?.doctorImage;
-  const certificateImage = doctor?.certificateImage;
+  // ── Destructure display fields ───────────────────────────────────────────
+  const name              = doctor?.userId?.username || "Doctor";
+  const specialization    = doctor?.specialization   || "";
+  const qualifications    = doctor?.qualifications   || "";
+  const experience        = doctor?.experience;
+  const fee               = doctor?.consultationFee;
+  const city              = doctor?.location?.city;
+  const address           = doctor?.location?.address;
+  const doctorImage       = doctor?.doctorImage;
   const availabilitySlots = doctor?.availabilitySlots || [];
-  const initials = getInitials(name);
-  const availableDays = availabilitySlots.filter(s => s.isAvailable);
+  const initials          = getInitials(name);
+  const availableDays     = availabilitySlots.filter(s => s.isAvailable);
+  const doctorWorksOnSelectedDay = selectedDay
+    ? (availabilitySlots.find(s => s.day === selectedDay)?.isAvailable ?? false)
+    : false;
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-6 space-y-4">
 
       {/* Back */}
-      <button onClick={() => navigate(-1)}
-        className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-[#274760] transition-colors">
+      <button
+        onClick={() => navigate(-1)}
+        className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-[#274760] transition-colors"
+      >
         <FiArrowLeft size={15} /> Back to doctors
       </button>
 
-      {/* ══════════════════════════════════════════════
-          TOP HERO — name, photo, stats all in one row
-      ══════════════════════════════════════════════ */}
       <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
         <div className="h-1.5 bg-linear-to-r from-[#274760] to-[#3a7ca5]" />
         <div className="p-6">
-          <div className="flex flex-col sm:flex-row gap-5">
 
+          <div className="flex flex-col sm:flex-row gap-5">
             {/* Avatar */}
             <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl shrink-0 overflow-hidden bg-[#274760]/8 border border-slate-100">
               {doctorImage
@@ -178,7 +299,7 @@ const PatientDoctorDetail = () => {
               }
             </div>
 
-            {/* Name + quals + chips */}
+            {/* Name + quals + stat tiles */}
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap items-center gap-2 mb-1">
                 <h1 className="text-2xl font-bold text-slate-800 leading-tight">{name}</h1>
@@ -192,7 +313,6 @@ const PatientDoctorDetail = () => {
                 <p className="text-sm text-slate-500 mb-4">{qualifications}</p>
               )}
 
-              {/* Stat tiles */}
               <div className="flex flex-wrap gap-2">
                 {experience != null && (
                   <div className="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-xl px-3 py-2">
@@ -234,16 +354,15 @@ const PatientDoctorDetail = () => {
             </div>
           </div>
 
-          {/* Weekly schedule */}
           {availabilitySlots.length > 0 && (
             <div className="mt-6 pt-5 border-t border-slate-100">
               <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">Weekly Schedule</p>
               <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
                 {DAYS_ORDER.map(day => {
-                  const s = availabilitySlots.find(sl => sl.day === day);
+                  const s    = availabilitySlots.find(sl => sl.day === day);
                   const open = s?.isAvailable;
-                  const st = s ? parseHHMM(s.startTime) : null;
-                  const en = s ? parseHHMM(s.endTime) : null;
+                  const st   = s ? parseHHMM(s.startTime) : null;
+                  const en   = s ? parseHHMM(s.endTime)   : null;
                   return (
                     <div key={day} className={[
                       "rounded-xl border p-2.5 text-center",
@@ -252,7 +371,7 @@ const PatientDoctorDetail = () => {
                       <div className="flex items-center justify-center gap-1 mb-1">
                         {open
                           ? <FiCheckCircle size={10} className="text-emerald-500" />
-                          : <FiXCircle size={10} className="text-slate-300" />
+                          : <FiXCircle     size={10} className="text-slate-300" />
                         }
                         <span className={`text-[11px] font-bold ${open ? "text-slate-700" : "text-slate-400"}`}>
                           {DAY_SHORT[day]}
@@ -271,28 +390,15 @@ const PatientDoctorDetail = () => {
               </div>
             </div>
           )}
-
-          {/* Certificate */}
-          {certificateImage && (
-            <div className="mt-5 pt-5 border-t border-slate-100">
-              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                <FiAward size={11} /> Verified Certificate
-              </p>
-              <img src={certificateImage} alt="Certificate"
-                className="w-full max-h-52 object-cover rounded-xl border border-slate-100" />
-            </div>
-          )}
         </div>
       </div>
 
-      {/* ══════════════════════════════════════════════
-          BOOKING FORM — clean, not inside a card stack
-      ══════════════════════════════════════════════ */}
+
+      
       <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
         <div className="h-1 bg-linear-to-r from-[#274760] to-[#3a7ca5]" />
         <div className="p-6">
 
-          {/* Form header */}
           <div className="flex items-start justify-between gap-4 mb-6">
             <div>
               <h2 className="text-lg font-bold text-slate-800">Book an Appointment</h2>
@@ -308,102 +414,117 @@ const PatientDoctorDetail = () => {
             )}
           </div>
 
-          {/* Toasts */}
           {success && (
             <div className="mb-5 flex items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 font-medium">
               <FiCheck size={14} /> {success}
             </div>
           )}
-          {error && (
-            <ErrorBanner error={error} />
-          )}
+          {error && <ErrorBanner error={error} />}
 
           <form onSubmit={submitAppointment} className="space-y-6">
 
-            {/* Step 1: Consultation type */}
+            {/* ── Step 1: Date & Time ───────────────────────────────── */}
             <div>
               <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">
-                1 — Consultation Type
-              </p>
-              <div className="grid grid-cols-3 gap-3">
-                {CONSULT_TYPES.map(({ value, label, icon: Icon, color }) => (
-                  <button key={value} type="button" onClick={() => setConsultationType(value)}
-                    className={[
-                      "flex flex-col items-center gap-2 py-4 rounded-xl border-2 text-xs font-bold transition-all",
-                      consultationType === value
-                        ? `${color} ring-2 ring-offset-1 ring-current shadow-sm`
-                        : "border-slate-200 text-slate-400 hover:bg-slate-50 hover:border-slate-300",
-                    ].join(" ")}>
-                    <Icon size={20} />
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Step 2: Date + slots */}
-            <div>
-              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">
-                2 — Pick a Date & Time
+                1 — Pick a Date &amp; Time
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                {/* Date picker */}
                 <div>
-                  <input type="date" min={minDate} value={appointmentDate}
+                  <input
+                    type="date"
+                    min={minDate}
+                    value={appointmentDate}
                     onChange={e => setAppointmentDate(e.target.value)}
-                    className={inputCls} required />
-                  {appointmentDate && (
-                    <p className={`mt-1.5 text-xs font-semibold ${availableSlotsForDate.length > 0 ? "text-emerald-600" : "text-red-500"}`}>
+                    className={inputCls}
+                    required
+                  />
+                  {/* Hint — only shown once slots are confirmed for this date */}
+                  {appointmentDate && slotsReady && (
+                    <p className={`mt-1.5 text-xs font-semibold ${
+                      availableSlotsForDate.length > 0 ? "text-emerald-600" : "text-red-500"
+                    }`}>
                       {selectedDay
                         ? availableSlotsForDate.length > 0
-                          ? `✓ ${selectedDay} — ${availableSlotsForDate.length} slots available`
-                          : `✗ ${selectedDay} — doctor not available`
+                          ? `✓ ${selectedDay} — ${availableSlotsForDate.length} slot${availableSlotsForDate.length !== 1 ? "s" : ""} available`
+                          : `✗ ${selectedDay} — no slots available`
                         : ""}
                     </p>
                   )}
                 </div>
 
+                {/* ── Slot column — 3 clean mutually exclusive states ── */}
                 <div>
-                  {availableSlotsForDate.length > 0 ? (
-                    <div className="grid grid-cols-2 gap-2 max-h-42 overflow-y-auto pr-0.5">
-                      {availableSlotsForDate.map(s => (
-                        <button key={s} type="button" onClick={() => setTimeSlot(s)}
-                          className={[
-                            "py-2.5 rounded-xl border text-xs font-semibold transition-all",
-                            timeSlot === s
-                              ? "bg-[#274760] text-white border-[#274760] shadow-sm"
-                              : "border-slate-200 text-slate-600 hover:border-[#274760]/40 hover:bg-slate-50",
-                          ].join(" ")}>
-                          {s}
-                        </button>
-                      ))}
+                  {/* A: no date chosen */}
+                  {!appointmentDate && (
+                    <div className="h-full min-h-11 flex items-center rounded-xl border border-slate-100 bg-slate-50 px-3.5 py-3 text-sm text-slate-400">
+                      Select a date first
                     </div>
-                  ) : (
-                    <div className={[
-                      "h-full min-h-11 flex items-center rounded-xl border px-3.5 py-3 text-sm",
-                      !appointmentDate
-                        ? "border-slate-100 bg-slate-50 text-slate-400"
-                        : "border-red-100 bg-red-50 text-red-400",
-                    ].join(" ")}>
-                      {!appointmentDate ? "Select a date first" : "No available slots for this day"}
+                  )}
+
+                  {/* B: fetch in-flight — nothing clickable at all */}
+                  {appointmentDate && loadingSlots && (
+                    <div className="flex items-center justify-center gap-2 py-6 text-sm text-slate-400">
+                      <Spinner /> Checking availability…
                     </div>
+                  )}
+
+                  {/* C: fetch done — render final filtered list */}
+                  {appointmentDate && slotsReady && (
+                    <>
+                      {availableSlotsForDate.length === 0 ? (
+                        <div className="h-full min-h-11 flex items-center rounded-xl border border-red-100 bg-red-50 px-3.5 py-3 text-sm text-red-400">
+                          {doctorWorksOnSelectedDay
+                            ? "All slots are fully booked for this day"
+                            : "Doctor is not available on this day"}
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-0.5">
+                          {availableSlotsForDate.map(s => (
+                            <button
+                              key={s}
+                              type="button"
+                              onClick={() => setTimeSlot(s)}
+                              className={[
+                                "py-2.5 rounded-xl border text-xs font-semibold transition-all",
+                                timeSlot === s
+                                  ? "bg-[#274760] text-white border-[#274760] shadow-sm"
+                                  : "border-slate-200 text-slate-600 hover:border-[#274760]/40 hover:bg-slate-50",
+                              ].join(" ")}
+                            >
+                              {s}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
             </div>
 
-            {/* Step 3: Reason */}
+            {/* ── Step 2: Reason ──────────────────────────────────────── */}
             <div>
               <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">
-                3 — Reason for Visit
+                2 — Reason for Visit
               </p>
-              <textarea value={reasonForVisit} onChange={e => setReasonForVisit(e.target.value)}
+              <textarea
+                value={reasonForVisit}
+                onChange={e => setReasonForVisit(e.target.value)}
                 placeholder="Describe your symptoms or reason for the consultation…"
-                rows={3} className={`${inputCls} resize-none`} required />
+                rows={3}
+                className={`${inputCls} resize-none`}
+                required
+              />
             </div>
 
             {/* Submit */}
-            <button type="submit" disabled={submitting || !timeSlot}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#274760] text-white text-sm font-bold py-3.5 hover:bg-[#1e364a] disabled:opacity-60 active:scale-[0.98] transition-all shadow-sm shadow-[#274760]/20">
+            <button
+              type="submit"
+              disabled={submitting || !timeSlot}
+              className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#274760] text-white text-sm font-bold py-3.5 hover:bg-[#1e364a] disabled:opacity-60 active:scale-[0.98] transition-all shadow-sm shadow-[#274760]/20"
+            >
               {submitting
                 ? <><Spinner /> Sending request…</>
                 : "Request Appointment"

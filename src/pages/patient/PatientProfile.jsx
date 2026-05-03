@@ -3,11 +3,13 @@ import api from "../../api/axios.js";
 import { useAuth } from "../../context/AuthContext.jsx";
 import {
   FiEdit2, FiSave, FiUser, FiUpload,
-  FiPhone, FiMapPin, FiActivity, FiAlertCircle, FiCheck, FiX
+  FiPhone, FiMapPin, FiActivity, FiAlertCircle, FiCheck, FiX,
+  FiCamera, FiChevronLeft, FiChevronRight, FiShield
 } from "react-icons/fi";
 import { Field, InfoRow, Tag, inputCls } from "../../components/patientComponent/profile/ProfileComp.jsx";
 import RefreshBanner from "../../components/shared/RefreshBanner.jsx";
-
+import { formatDate, getInitials } from "../../utils/commonUtils.js";
+import Spinner from "../../components/shared/Spinner.jsx";
 
 const TABS = ["Personal", "Medical", "Emergency"];
 
@@ -17,8 +19,6 @@ const emptyForm = {
   medicalNotes: "", emergencyContactName: "", emergencyContactPhone: "",
   emergencyRelation: "",
 };
-import { formatDate, getInitials } from "../../utils/commonUtils.js";
-import Spinner from "../../components/shared/Spinner.jsx";
 
 const isoFromDateInput = (v) => {
   if (!v) return undefined;
@@ -35,8 +35,22 @@ const dateInputFromAny = (v) => {
 const safeJoin = (arr) => (Array.isArray(arr) ? arr.filter(Boolean).join(", ") : "");
 const splitList = (v) => (v ? v.split(",").map((s) => s.trim()).filter(Boolean) : []);
 
-
-
+// Compute profile completeness percentage
+const getCompleteness = (profile, form, isEditing) => {
+  const fields = [
+    isEditing ? form.phoneNumber : profile?.phoneNumber,
+    isEditing ? form.dob : profile?.personalInfo?.dob,
+    isEditing ? form.gender : profile?.personalInfo?.gender,
+    isEditing ? form.city : profile?.personalInfo?.address?.city,
+    isEditing ? form.bloodGroup : profile?.medicalInfo?.bloodGroup,
+    isEditing ? form.allergies : safeJoin(profile?.medicalInfo?.allergies),
+    isEditing ? form.emergencyContactName : profile?.emergencyInfo?.contactName,
+    isEditing ? form.emergencyContactPhone : profile?.emergencyInfo?.contactPhone,
+    profile?.profileImage || profile?.personalInfo?.profileImage,
+  ];
+  const filled = fields.filter(Boolean).length;
+  return Math.round((filled / fields.length) * 100);
+};
 
 const PatientProfile = () => {
   const { user, setUser } = useAuth();
@@ -67,6 +81,7 @@ const PatientProfile = () => {
 
   const initials = getInitials(headlineName);
 
+  const completeness = getCompleteness(profile, form, editing);
 
   const hydrateForm = (p) => setForm({
     phoneNumber: p?.phoneNumber || "",
@@ -213,7 +228,6 @@ const PatientProfile = () => {
     }
   };
 
-
   const allergiesList = profile?.medicalInfo?.allergies?.filter(Boolean) || [];
   const chronicList = profile?.medicalInfo?.chronicDiseases?.filter(Boolean) || [];
   const medicationList = profile?.medicalInfo?.medications?.filter(Boolean) || [];
@@ -221,113 +235,175 @@ const PatientProfile = () => {
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 font-[system-ui]">
 
-    <RefreshBanner initialLoading={initialLoading} saving={saving} onClick={fetchProfile} tabName={"My Profile"} text={"Manage your health & contact information"} />
+      <RefreshBanner
+        initialLoading={initialLoading}
+        saving={saving}
+        onClick={fetchProfile}
+        tabName={"My Profile"}
+        text={"Manage your health & contact information"}
+      />
 
+      {/* ── Toast message ── */}
       {message.text && (
         <div className={[
           "mb-5 flex items-start gap-3 px-4 py-3 rounded-xl border text-sm font-medium",
           message.type === "success" ? "bg-emerald-50 border-emerald-100 text-emerald-700" : "",
-          message.type === "error" ? "bg-red-50 border-red-100 text-red-700" : "",
-          message.type === "info" ? "bg-blue-50 border-blue-100 text-blue-700" : "",
+          message.type === "error"   ? "bg-red-50 border-red-100 text-red-700" : "",
+          message.type === "info"    ? "bg-blue-50 border-blue-100 text-blue-700" : "",
         ].join(" ")}>
           {message.type === "success" && <FiCheck size={16} className="mt-0.5 shrink-0" />}
-          {message.type === "error" && <FiAlertCircle size={16} className="mt-0.5 shrink-0" />}
+          {message.type === "error"   && <FiAlertCircle size={16} className="mt-0.5 shrink-0" />}
           <span>{message.text}</span>
         </div>
       )}
 
       {initialLoading ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-10 flex items-center justify-center gap-3">
-          <Spinner/>
+          <Spinner />
           <p className="text-sm text-slate-500 font-medium">Loading your profile…</p>
         </div>
       ) : (
         <div className="space-y-4">
 
-          <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
-            <div className="h-1.5 bg-linear-to-r from-[#274760] to-[#3a6b8f]" />
-            <div className="p-6 flex flex-col sm:flex-row sm:items-center gap-5">
-              <div className="relative w-20 h-20 rounded-2xl shrink-0 overflow-hidden bg-[#274760]/8 shadow-sm">
-                {avatarSrc ? (
-                  <img src={avatarSrc} alt={headlineName} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-[#274760] font-bold text-2xl">
-                    {initials}
-                  </div>
-                )}
-                {uploadingImage && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                    <Spinner/>
-                  </div>
-                )}
-                {!isNew && !uploadingImage && (
-                  <label className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 opacity-0 hover:opacity-100 cursor-pointer transition-opacity">
-                    <FiUpload size={16} className="text-white" />
-                    <span className="text-white text-[10px] font-semibold mt-1">Change</span>
-                    <input type="file" accept="image/*" className="hidden" onChange={onImageChange} />
-                  </label>
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="text-xl font-bold text-slate-800">{headlineName}</h2>
-                  {profile?.personalInfo?.gender && (
-                    <span className="px-2.5 py-0.5 rounded-full bg-[#274760]/8 text-[#274760] text-xs font-semibold capitalize">
-                      {profile.personalInfo.gender}
-                    </span>
-                  )}
-                  {profile?.medicalInfo?.bloodGroup && (
-                    <span className="px-2.5 py-0.5 rounded-full bg-red-50 text-red-600 text-xs font-bold border border-red-100">
-                      {profile.medicalInfo.bloodGroup}
-                    </span>
-                  )}
-                </div>
-                <p className="text-sm text-slate-400 mt-0.5 truncate">
-                  {profile?.user?.email || user?.email || "—"}
-                </p>
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {profile?.phoneNumber && (
-                    <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg">
-                      <FiPhone size={12} className="text-slate-400" /> {profile.phoneNumber}
-                    </span>
-                  )}
-                  {(profile?.personalInfo?.address?.city || profile?.personalInfo?.address?.street) && (
-                    <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg">
-                      <FiMapPin size={12} className="text-slate-400" />
-                      {[profile.personalInfo.address.city, profile.personalInfo.address.street].filter(Boolean).join(", ")}
-                    </span>
-                  )}
-                  {profile?.personalInfo?.dob && (
-                    <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg">
-                      <FiUser size={12} className="text-slate-400" /> {formatDate(profile.personalInfo.dob)}
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
+          {/* ── HERO CARD ── */}
+          <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+
+            {/* Dark header band */}
+            <div className="h-20 bg-[#274760] relative">
+              {/* Edit / Cancel button lives in the band so it's always visible */}
+              <div className="absolute top-4 right-4 flex items-center gap-2">
                 {!isNew && (
                   editing ? (
                     <button
                       onClick={cancelEdit}
                       disabled={saving}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-600 text-sm font-semibold hover:bg-slate-50 disabled:opacity-50 transition-colors">
-                      <FiX size={14} /> Cancel
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-white/15 border border-white/25 text-white text-xs font-semibold hover:bg-white/25 disabled:opacity-50 transition-colors"
+                    >
+                      <FiX size={13} /> Cancel
                     </button>
                   ) : (
                     <button
                       onClick={() => setEditing(true)}
                       disabled={initialLoading || saving}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#274760] text-white text-sm font-semibold hover:bg-[#1e364a] disabled:opacity-50 transition-colors"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-white/15 border border-white/25 text-white text-xs font-semibold hover:bg-white/25 disabled:opacity-50 transition-colors"
                     >
-                      <FiEdit2 size={14} /> Edit Profile
+                      <FiEdit2 size={13} /> Edit Profile
                     </button>
                   )
                 )}
               </div>
             </div>
+
+            <div className="px-6 pb-5">
+              {/* Avatar row — pulls up into the dark band */}
+              <div className="flex items-end gap-4 -mt-9 mb-4">
+
+                {/* Avatar with always-visible upload button */}
+                <div className="relative shrink-0 py-2">
+                  <div className="w-20 h-20 rounded-2xl border-3 border-white bg-[#274760]/10 overflow-hidden shadow-md flex items-center justify-center"
+                       style={{ border: "3px solid white" }}>
+                    {avatarSrc ? (
+                      <img src={avatarSrc} alt={headlineName} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-[#274760] font-bold text-2xl">{initials}</span>
+                    )}
+                    {uploadingImage && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-2xl">
+                        <Spinner />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Always-visible camera button — not hover-only */}
+                  {!isNew && !uploadingImage && (
+                    <label
+                      className="absolute -bottom-1.5 -right-1.5 w-7 h-7 rounded-full bg-[#274760] border-2 border-white flex items-center justify-center cursor-pointer shadow-sm hover:bg-[#1e364a] transition-colors"
+                      title="Change profile photo"
+                    >
+                      <FiCamera size={12} className="text-white" />
+                      <input type="file" accept="image/*" className="hidden" onChange={onImageChange} />
+                    </label>
+                  )}
+                </div>
+
+                {/* Name + badges float beside avatar */}
+                <div className="pb-1 flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="text-lg font-bold text-slate-800 truncate">{headlineName}</h2>
+                    {profile?.personalInfo?.gender && (
+                      <span className="px-2.5 py-0.5 rounded-full bg-[#274760]/8 text-[#274760] text-xs font-semibold capitalize">
+                        {profile.personalInfo.gender}
+                      </span>
+                    )}
+                    {profile?.medicalInfo?.bloodGroup && (
+                      <span className="px-2.5 py-0.5 rounded-full bg-red-50 text-red-600 text-xs font-bold border border-red-100">
+                        {profile.medicalInfo.bloodGroup}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-slate-400 truncate mt-0.5">
+                    {profile?.user?.email || user?.email || "—"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Photo hint — only shown when profile exists (not new) */}
+              {!isNew && (
+                <p className="text-xs text-slate-400 mb-3 -mt-1 flex items-center gap-1">
+                  <FiCamera size={11} />
+                  Tap the camera icon on your avatar to change your photo
+                </p>
+              )}
+
+              {/* Chips row */}
+              <div className="flex flex-wrap gap-2 mb-4">
+                {profile?.phoneNumber && (
+                  <span className="flex items-center gap-1.5 text-xs font-medium text-slate-600 bg-slate-100 px-2.5 py-1.5 rounded-lg">
+                    <FiPhone size={11} className="text-slate-400" /> {profile.phoneNumber}
+                  </span>
+                )}
+                {(profile?.personalInfo?.address?.city || profile?.personalInfo?.address?.street) && (
+                  <span className="flex items-center gap-1.5 text-xs font-medium text-slate-600 bg-slate-100 px-2.5 py-1.5 rounded-lg">
+                    <FiMapPin size={11} className="text-slate-400" />
+                    {[profile.personalInfo.address.city, profile.personalInfo.address.street].filter(Boolean).join(", ")}
+                  </span>
+                )}
+                {profile?.personalInfo?.dob && (
+                  <span className="flex items-center gap-1.5 text-xs font-medium text-slate-600 bg-slate-100 px-2.5 py-1.5 rounded-lg">
+                    <FiUser size={11} className="text-slate-400" /> {formatDate(profile.personalInfo.dob)}
+                  </span>
+                )}
+              </div>
+
+              {/* Profile completeness bar */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-xs text-slate-400 font-medium">Profile completeness</span>
+                  <span className="text-xs font-bold text-[#274760]">{completeness}%</span>
+                </div>
+                <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-[#274760] rounded-full transition-all duration-500"
+                    style={{ width: `${completeness}%` }}
+                  />
+                </div>
+                {completeness < 100 && (
+                  <p className="text-xs text-slate-400 mt-1">
+                    {completeness < 50
+                      ? "Add more details to help your doctor provide better care."
+                      : "Almost complete — a few more fields to go."}
+                  </p>
+                )}
+              </div>
+            </div>
           </div>
+
+          {/* ── FORM / VIEW CONTENT ── */}
           {formEnabled ? (
-            <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+
+            /* ── EDIT FORM ── */
+            <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+              {/* Tab bar */}
               <div className="flex border-b border-slate-100 bg-slate-50/60">
                 {TABS.map((tab, i) => (
                   <button
@@ -347,6 +423,8 @@ const PatientProfile = () => {
 
               <form onSubmit={handleSave}>
                 <div className="p-6">
+
+                  {/* Tab 0: Personal */}
                   {activeTab === 0 && (
                     <div className="grid grid-cols-2 gap-4">
                       <Field label="Phone Number" hint="10–15 digits" span2>
@@ -387,15 +465,15 @@ const PatientProfile = () => {
                           ))}
                         </select>
                       </Field>
-                      <Field label="Allergies" hint="(comma separated)">
+                      <Field label="Allergies" hint="comma separated">
                         <input name="allergies" value={form.allergies} onChange={onChange}
                           placeholder="e.g. peanuts, penicillin" className={inputCls} />
                       </Field>
-                      <Field label="Chronic Diseases" hint="(comma separated)">
+                      <Field label="Chronic Diseases" hint="comma separated">
                         <input name="chronicDiseases" value={form.chronicDiseases} onChange={onChange}
                           placeholder="e.g. diabetes, hypertension" className={inputCls} />
                       </Field>
-                      <Field label="Medications" hint="(comma separated)">
+                      <Field label="Medications" hint="comma separated">
                         <input name="medications" value={form.medications} onChange={onChange}
                           placeholder="e.g. metformin, aspirin" className={inputCls} />
                       </Field>
@@ -434,18 +512,17 @@ const PatientProfile = () => {
 
                 {/* Form footer */}
                 <div className="px-6 pb-6 flex items-center justify-between gap-3 pt-2 border-t border-slate-100">
-                  {/* Tab navigation */}
                   <div className="flex gap-2">
                     {activeTab > 0 && (
                       <button type="button" onClick={() => setActiveTab(activeTab - 1)}
-                        className="px-3.5 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 transition-colors">
-                        ← Back
+                        className="inline-flex items-center gap-1 px-3.5 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 transition-colors">
+                        <FiChevronLeft size={14} /> Back
                       </button>
                     )}
                     {activeTab < TABS.length - 1 && (
                       <button type="button" onClick={() => setActiveTab(activeTab + 1)}
-                        className="px-3.5 py-2 rounded-lg border border-[#274760] text-[#274760] text-sm font-medium hover:bg-[#274760]/5 transition-colors">
-                        Next →
+                        className="inline-flex items-center gap-1 px-3.5 py-2 rounded-lg border border-[#274760] text-[#274760] text-sm font-medium hover:bg-[#274760]/5 transition-colors">
+                        Next <FiChevronRight size={14} />
                       </button>
                     )}
                   </div>
@@ -463,31 +540,34 @@ const PatientProfile = () => {
             </div>
 
           ) : (
+
             /* ── VIEW MODE — 3-card grid ── */
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
-              {/* Personal */}
-              <div className="rounded-2xl border border-slate-200 bg-white p-5">
+              {/* Personal card */}
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <div className="flex items-center gap-2 mb-4">
                   <div className="w-8 h-8 rounded-lg bg-[#274760]/10 flex items-center justify-center">
                     <FiUser size={14} className="text-[#274760]" />
                   </div>
-                  <h3 className="text-base font-bold text-slate-800">Personal</h3>
+                  <h3 className="text-sm font-bold text-slate-800">Personal</h3>
                 </div>
-                <InfoRow icon={FiPhone} label="Phone" value={profile?.phoneNumber} />
-                <InfoRow icon={FiUser} label="Gender" value={profile?.personalInfo?.gender} />
-                <InfoRow icon={FiUser} label="DOB" value={formatDate(profile?.personalInfo?.dob)} />
-                <InfoRow icon={FiMapPin} label="City" value={profile?.personalInfo?.address?.city} />
-                <InfoRow icon={FiMapPin} label="Street" value={profile?.personalInfo?.address?.street} />
+                <div className="space-y-3">
+                  <ViewRow label="Phone" value={profile?.phoneNumber} icon={<FiPhone size={11} className="text-slate-400" />} />
+                  <ViewRow label="Gender" value={profile?.personalInfo?.gender} capitalize />
+                  <ViewRow label="Date of birth" value={formatDate(profile?.personalInfo?.dob)} />
+                  <ViewRow label="City" value={profile?.personalInfo?.address?.city} icon={<FiMapPin size={11} className="text-slate-400" />} />
+                  <ViewRow label="Street" value={profile?.personalInfo?.address?.street} />
+                </div>
               </div>
 
-              {/* Medical */}
-              <div className="rounded-2xl border border-slate-200 bg-white p-5">
+              {/* Medical card */}
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <div className="flex items-center gap-2 mb-4">
                   <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center">
                     <FiActivity size={14} className="text-red-500" />
                   </div>
-                  <h3 className="text-base font-bold text-slate-800">Medical</h3>
+                  <h3 className="text-sm font-bold text-slate-800">Medical</h3>
                   {profile?.medicalInfo?.bloodGroup && (
                     <span className="ml-auto px-2 py-0.5 rounded-full bg-red-50 text-red-600 text-xs font-bold border border-red-100">
                       {profile.medicalInfo.bloodGroup}
@@ -497,26 +577,32 @@ const PatientProfile = () => {
 
                 {allergiesList.length > 0 && (
                   <div className="mb-3">
-                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Allergies</p>
-                    <div>{allergiesList.map((a) => <Tag key={a} color="red">{a}</Tag>)}</div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Allergies</p>
+                    <div className="flex flex-wrap gap-1">
+                      {allergiesList.map((a) => <Tag key={a} color="red">{a}</Tag>)}
+                    </div>
                   </div>
                 )}
                 {chronicList.length > 0 && (
                   <div className="mb-3">
-                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Chronic Diseases</p>
-                    <div>{chronicList.map((c) => <Tag key={c} color="amber">{c}</Tag>)}</div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Chronic Diseases</p>
+                    <div className="flex flex-wrap gap-1">
+                      {chronicList.map((c) => <Tag key={c} color="amber">{c}</Tag>)}
+                    </div>
                   </div>
                 )}
                 {medicationList.length > 0 && (
                   <div className="mb-3">
-                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Medications</p>
-                    <div>{medicationList.map((m) => <Tag key={m} color="green">{m}</Tag>)}</div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Medications</p>
+                    <div className="flex flex-wrap gap-1">
+                      {medicationList.map((m) => <Tag key={m} color="green">{m}</Tag>)}
+                    </div>
                   </div>
                 )}
                 {profile?.medicalInfo?.medicalNotes && (
                   <div className="mt-2 rounded-lg bg-slate-50 border border-slate-100 px-3 py-2.5">
-                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1">Notes</p>
-                    <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed font-medium">
+                    <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1">Notes</p>
+                    <p className="text-xs text-slate-700 whitespace-pre-wrap leading-relaxed font-medium">
                       {profile.medicalInfo.medicalNotes}
                     </p>
                   </div>
@@ -526,22 +612,34 @@ const PatientProfile = () => {
                 )}
               </div>
 
-              {/* Emergency */}
-              <div className="rounded-2xl border border-slate-200 bg-white p-5">
+              {/* Emergency card — amber border to distinguish importance */}
+              <div className="rounded-2xl border border-amber-200 bg-white p-5 shadow-sm">
                 <div className="flex items-center gap-2 mb-4">
                   <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
-                    <FiAlertCircle size={14} className="text-amber-500" />
+                    <FiShield size={14} className="text-amber-500" />
                   </div>
-                  <h3 className="text-base font-bold text-slate-800">Emergency Contact</h3>
+                  <h3 className="text-sm font-bold text-slate-800">Emergency Contact</h3>
                 </div>
                 {profile?.emergencyInfo?.contactName ? (
-                  <>
-                    <InfoRow icon={FiUser} label="Name" value={profile.emergencyInfo.contactName} />
-                    <InfoRow icon={FiUser} label="Relationship" value={profile.emergencyInfo.relation} />
-                    <InfoRow icon={FiPhone} label="Phone" value={profile.emergencyInfo.contactPhone} />
-                  </>
+                  <div className="space-y-3">
+                    <ViewRow label="Name" value={profile.emergencyInfo.contactName} icon={<FiUser size={11} className="text-slate-400" />} />
+                    <ViewRow label="Relationship" value={profile.emergencyInfo.relation} />
+                    <ViewRow label="Phone" value={profile.emergencyInfo.contactPhone} icon={<FiPhone size={11} className="text-slate-400" />} />
+                    <div className="mt-3 rounded-lg bg-amber-50 border border-amber-100 px-3 py-2">
+                      <p className="text-xs text-amber-700 font-medium flex items-center gap-1.5">
+                        <FiAlertCircle size={11} />
+                        Contacted in a medical emergency
+                      </p>
+                    </div>
+                  </div>
                 ) : (
-                  <p className="text-sm text-slate-400 italic">No emergency contact added.</p>
+                  <div className="text-center py-4">
+                    <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center mx-auto mb-2">
+                      <FiAlertCircle size={18} className="text-amber-400" />
+                    </div>
+                    <p className="text-sm text-slate-400 italic">No emergency contact added.</p>
+                    <p className="text-xs text-slate-300 mt-1">Tap "Edit Profile" to add one.</p>
+                  </div>
                 )}
               </div>
 
@@ -553,5 +651,19 @@ const PatientProfile = () => {
     </div>
   );
 };
+
+/* ── Small helper for view-mode rows ── */
+const ViewRow = ({ label, value, icon, capitalize }) => (
+  <div>
+    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">{label}</p>
+    {value ? (
+      <p className={`text-sm font-medium text-slate-700 flex items-center gap-1.5 ${capitalize ? "capitalize" : ""}`}>
+        {icon}{value}
+      </p>
+    ) : (
+      <p className="text-sm text-slate-300 italic">—</p>
+    )}
+  </div>
+);
 
 export default PatientProfile;
