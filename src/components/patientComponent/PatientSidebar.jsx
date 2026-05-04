@@ -3,6 +3,8 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { FiHome, FiCalendar, FiUser, FiFileText, FiLogOut, FiActivity } from "react-icons/fi";
 import api from "../../api/axios.js";
 import { useAuth } from "../../context/AuthContext.jsx";
+import { getInitials } from "../../utils/commonUtils.js";
+import { ProHealthLogo } from "../shared/Logo.jsx";
 
 const navItems = [
   { to: "/patient", icon: FiHome, label: "Dashboard" },
@@ -13,24 +15,15 @@ const navItems = [
 ];
 
 const PatientSidebar = () => {
-  const {setUser , user} = useAuth();
+  const { setUser, user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  
-    const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState({ type: "", text: "" });
-  
-    const displayName = useMemo(() => user?.username || "Doctor", [user?.username]);
-    const initials = useMemo(
-      () =>
-        (displayName || "D")
-          .split(" ")
-          .filter(Boolean)
-          .slice(0, 2)
-          .map((s) => s[0]?.toUpperCase())
-          .join(""),
-      [displayName]
-    );
+
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState({ type: "", text: "" });
+
+  const displayName = useMemo(() => user?.username || "Doctor", [user?.username]);
+  const initials = getInitials(displayName, "Patient")
 
   const handleLogout = async (e) => {
     e.preventDefault();
@@ -75,13 +68,17 @@ const PatientSidebar = () => {
 
       {/* Logo */}
       <div className="flex items-center justify-center md:justify-start gap-3 px-1 md:px-2 mb-8 relative z-10">
-        <div className="flex items-center justify-center w-10 h-10 rounded-2xl bg-[#274760] shadow-lg shadow-[#274760]/30 shrink-0">
-          <FiActivity size={20} className="text-white" />
-        </div>
-        <div className="hidden md:block">
-          <p className="text-base font-semibold text-[#274760] tracking-wide">MediCare</p>
-          <p className="text-[11px] font-medium text-[#274760]/50 uppercase tracking-widest">Patient Portal</p>
-        </div>
+        <Link to="/" className="shrink-0 flex items-center gap-2.5 text-[#274760]">
+          <ProHealthLogo />
+          <div className="flex flex-col leading-none">
+            <span className="text-xl font-extrabold tracking-tight text-[#274760]">
+              Pro<span className="text-[#4a90b8]">Health</span>
+            </span>
+            <span className="text-[9px] font-semibold tracking-[0.18em] uppercase text-slate-400">
+              Medical Care
+            </span>
+          </div>
+        </Link>
       </div>
 
       {/* User Card */}
@@ -91,7 +88,7 @@ const PatientSidebar = () => {
         </div>
         <div className="hidden md:block">
           <p className="text-sm font-semibold text-[#274760]">{displayName}</p>
-          {/* <p className="text-[11px] text-[#274760]/50 tracking-wide">Patient · ID #00421</p> */}
+          <p className="text-[11px] text-[#274760]/50 tracking-wide">Patient</p>
         </div>
       </div>
 

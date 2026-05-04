@@ -9,6 +9,7 @@ import {
   FiMail,
   FiKey,
 } from "react-icons/fi";
+import { getInitials } from "../../utils/commonUtils.js";
 
 const titleFromPath = (pathname) => {
   if (pathname === "/patient") return "Dashboard";
@@ -58,13 +59,7 @@ const PatientNavbar = () => {
   const today = formatToday();
 
   const displayName = user?.username || "Patient";
-  const initials = (displayName || "P")
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((s) => s[0]?.toUpperCase())
-    .join("");
-
+  const initials = getInitials(displayName, "Patient")
   useEffect(() => {
     const onDocClick = (e) => {
       if (!menuRef.current) return;

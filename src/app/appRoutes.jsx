@@ -22,12 +22,12 @@ import DoctorDashboard from "../pages/doctor/DoctorDashboard.jsx";
 import DoctorProfile from "../pages/doctor/DoctorProfile.jsx";
 import DoctorAppointments from "../pages/doctor/DoctorAppointments.jsx";
 import DoctorPatients from "../pages/doctor/DoctorPatients.jsx";
-import DoctorNotifications from "../pages/doctor/DoctorNotifications.jsx";
+
 
 import VerifyEmail from "../pages/shared/VerifyEmail.jsx";
 import ChangePassword from "../pages/shared/ChangePassword.jsx";
 import DoctorPatientProfile from "../pages/doctor/DoctorPatientProfile.jsx";
-import Notifications from "../pages/doctor/DoctorNotifications.jsx";
+import Notifications from "../pages/shared/Notification.jsx";
 
 const PatientProtectedRoute = () => {
   const { user, loading } = useAuth();
@@ -115,7 +115,6 @@ const AppRoutes = () => {
           <Route index element={<DoctorDashboard />} />
           <Route path="appointments" element={<DoctorAppointments />} />
           <Route path="patients" element={<DoctorPatients />} />
-          <Route path="notifications" element={<DoctorNotifications />} />
           <Route path="verify-email" element={<VerifyEmail />} />
           <Route path="change-password" element={<ChangePassword />} />
           <Route path="doctors" element={<Doctors />} />

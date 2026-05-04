@@ -1,5 +1,6 @@
 import { useState } from "react";
 import api from "../../../api/axios";
+import { FiAlertCircle, FiStar } from "react-icons/fi";
 
 export const RatingModal = ({ appointmentId, doctorName, onDone }) => {
     const [rating, setRating] = useState(0);
