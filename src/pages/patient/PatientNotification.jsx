@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useAuth } from "../../context/AuthContext.jsx";
 import api from "../../api/axios.js";
+import NotificationRow from "../../components/shared/NotificationRow.jsx";
+import { toast } from "react-toastify";
 
 // ─── icons ────────────────────────────────────────────────────────────────────
 const BellIcon = () => (
@@ -52,71 +54,6 @@ const timeAgo = (dateStr) => {
     return new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 };
 
-// ─── single notification row ───────────────────────────────────────────────────
-const NotificationRow = ({ notification, onMarkRead, onDelete }) => {
-    const cfg = getConfig(notification.type);
-
-    return (
-        <div
-            className={`group relative flex items-start gap-4 px-5 py-4 rounded-2xl
-                  transition-all duration-200 border
-                  ${notification.isRead
-                    ? "bg-white border-slate-100"
-                    : "bg-[#f0f6ff] border-[#274760]/10"
-                }`}
-        >
-            {/* unread dot */}
-            {!notification.isRead && (
-                <span className={`absolute top-4 right-4 w-2 h-2 rounded-full ${cfg.dot}`} />
-            )}
-
-            {/* icon circle */}
-            <div className={`shrink-0 w-10 h-10 rounded-full flex items-center
-                       justify-center border ${cfg.badge}`}>
-                <CalendarIcon />
-            </div>
-
-            {/* content */}
-            <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    <span className={`text-[10px] font-semibold tracking-wider uppercase
-                            px-2 py-0.5 rounded-full border ${cfg.badge}`}>
-                        {cfg.label}
-                    </span>
-                    <span className="text-[11px] text-slate-400">{timeAgo(notification.createdAt)}</span>
-                </div>
-                <p className={`text-sm leading-relaxed
-                       ${notification.isRead ? "text-slate-500" : "text-slate-700 font-medium"}`}>
-                    {notification.message}
-                </p>
-            </div>
-
-            {/* action buttons — visible on hover */}
-            <div className="shrink-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                {!notification.isRead && (
-                    <button
-                        onClick={() => onMarkRead(notification._id)}
-                        title="Mark as read"
-                        className="w-7 h-7 rounded-lg flex items-center justify-center
-                       text-emerald-500 hover:bg-emerald-50 transition-colors"
-                    >
-                        <CheckIcon />
-                    </button>
-                )}
-                <button
-                    onClick={() => onDelete(notification._id)}
-                    title="Delete"
-                    className="w-7 h-7 rounded-lg flex items-center justify-center
-                     text-slate-400 hover:bg-red-50 hover:text-red-400 transition-colors"
-                >
-                    <TrashIcon />
-                </button>
-            </div>
-        </div>
-    );
-};
-
-// ─── skeleton loader ───────────────────────────────────────────────────────────
 const SkeletonRow = () => (
     <div className="flex items-start gap-4 px-5 py-4 rounded-2xl border border-slate-100 bg-white animate-pulse">
         <div className="w-10 h-10 rounded-full bg-slate-100 shrink-0" />
@@ -133,6 +70,7 @@ const Notifications = () => {
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState("all"); // "all" | "unread"
+    
 
     // ── fetch on mount ────────────────────────────────────────────────────────
     const fetchNotifications = useCallback(async () => {
@@ -287,6 +225,7 @@ const Notifications = () => {
                     ) : (
                         displayed.map((n) => (
                             <NotificationRow
+                                getConfig={getConfig}
                                 key={n._id}
                                 notification={n}
                                 onMarkRead={handleMarkRead}

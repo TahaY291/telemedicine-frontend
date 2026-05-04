@@ -34,21 +34,27 @@ const useQuery = () => {
   return useMemo(() => new URLSearchParams(search), [search]);
 };
 
-/** Sort: upcoming first (nearest → farthest), then past (most recent → oldest). */
 const sortByTime = (appointments) => {
   const now = Date.now();
   const upcoming = [];
   const past = [];
+
   for (const a of appointments) {
-    const t = parseSlotStart(a)?.getTime?.() ?? 0;
-    (t >= now ? upcoming : past).push({ ...a, _slotMs: t });
+    const parsed = parseSlotStart(a.appointmentDate, a.timeSlot);
+    const t = parsed instanceof Date && !isNaN(parsed) ? parsed.getTime() : null;
+
+    if (t !== null && t >= now) {
+      upcoming.push({ ...a, _slotMs: t });
+    } else {
+      past.push({ ...a, _slotMs: t ?? 0 });
+    }
   }
+
   upcoming.sort((a, b) => a._slotMs - b._slotMs);
   past.sort((a, b) => b._slotMs - a._slotMs);
+
   return [...upcoming, ...past];
 };
-
-
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
