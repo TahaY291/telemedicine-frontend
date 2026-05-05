@@ -184,8 +184,6 @@ const DoctorAppointments = () => {
               <AppointmentCard
                 key={a._id}
                 appointment={a}
-                // meetingLink={meetingLinks[a._id] || ""}
-                // onMeetingLinkChange={(val) => setMeetingLinks((prev) => ({ ...prev, [a._id]: val }))}
                 onApprove={() => approve(a._id)}
                 onCancel={() => cancel(a._id)}
                 onReschedule={reschedule}

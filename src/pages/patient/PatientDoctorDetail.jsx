@@ -8,6 +8,7 @@ import {
 import Spinner from "../../components/shared/Spinner.jsx";
 import ErrorBanner from "../../components/shared/ErrorBanner.jsx";
 import { getInitials } from "../../utils/commonUtils.js";
+import { useLightbox } from "../../context/LightBoxContext.jsx";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -42,16 +43,7 @@ const buildTimeSlots = (startTime, endTime, stepMinutes = 30) => {
   return slots;
 };
 
-/**
- * Normalize a 12-hour time string to a canonical form for safe comparison.
- *
- * Handles both formats that can appear:
- *   "9:00 AM"  →  "9:00 AM"
- *   "09:00 AM" →  "9:00 AM"   (leading zero stripped from hour)
- *   "9:00AM"   →  "9:00 AM"   (space inserted before meridiem)
- *
- * We parse to integers so leading zeros can never cause a mismatch.
- */
+
 const normalizeTimePart = (part) => {
   const trimmed = part.trim();
   const match   = trimmed.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
@@ -104,6 +96,7 @@ const inputCls = "w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-whi
 const PatientDoctorDetail = () => {
   const { doctorId } = useParams();
   const navigate     = useNavigate();
+  const {openLightbox} = useLightbox()
 
   const [loading,    setLoading]    = useState(true);
   const [error,      setError]      = useState("");
@@ -114,6 +107,7 @@ const PatientDoctorDetail = () => {
   const [appointmentDate, setAppointmentDate] = useState("");
   const [timeSlot,        setTimeSlot]        = useState("");
   const [reasonForVisit,  setReasonForVisit]  = useState("");
+
 
   /**
    * bookedSlots — raw strings from the API, normalized before comparison.
@@ -294,7 +288,7 @@ useEffect(() => {
             {/* Avatar */}
             <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl shrink-0 overflow-hidden bg-[#274760]/8 border border-slate-100">
               {doctorImage
-                ? <img src={doctorImage} alt={name} className="w-full h-full object-cover object-top" />
+                ? <img src={doctorImage} onClick={()=> doctorImage && openLightbox(doctorImage)} alt={name} className="w-full h-full object-cover object-top" />
                 : <div className="w-full h-full flex items-center justify-center text-[#274760] font-bold text-2xl">{initials}</div>
               }
             </div>

@@ -51,6 +51,7 @@ const formatToday = () => {
 const PatientNavbar = () => {
   const location = useLocation();
   const { user } = useAuth();
+  
   const [open, setOpen] = useState(false);
   const menuRef = useRef(null);
 

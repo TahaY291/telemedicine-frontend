@@ -6,6 +6,7 @@ import {
 import { formatDate } from "../../../utils/commonUtils";
 import { SectionCard } from "./PatientRecordsComp";
 import { InfoRow } from "./PatientRecordsComp";
+import { useLightbox } from "../../../context/LightBoxContext";
 
 export const ConsultationDetailPanel = ({ consultation: c, onClose }) => {
     if (!c) return null;
@@ -23,6 +24,8 @@ export const ConsultationDetailPanel = ({ consultation: c, onClose }) => {
     const vitalSigns = c?.vitalSigns || {};
     const hasVitals = Object.values(vitalSigns).some(Boolean);
 
+    const {openLightbox} = useLightbox()
+
     const initials = getInitials(doctorName, "DR")
 
     return (
@@ -36,7 +39,7 @@ export const ConsultationDetailPanel = ({ consultation: c, onClose }) => {
                     {/* Doctor avatar */}
                     <div className="w-12 h-12 rounded-xl shrink-0 overflow-hidden shadow-md shadow-[#274760]/20 bg-[#274760] flex items-center justify-center text-white font-bold text-base">
                         {doctorImage
-                            ? <img src={doctorImage} alt={doctorName} className="w-full h-full object-cover object-top" />
+                            ? <img src={doctorImage}  onClick={() =>doctorImage && openLightbox(doctorImage)} alt={doctorName} className="w-full h-full object-cover object-top" />
                             : initials
                         }
                     </div>

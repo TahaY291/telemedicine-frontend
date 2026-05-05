@@ -4,6 +4,7 @@ import {
   FiAlertCircle, FiFileText, FiPhone, FiRepeat,
 } from "react-icons/fi";
 import { Link } from "react-router-dom";
+import { useLightbox } from "../../context/LightBoxContext";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -118,6 +119,8 @@ const AppointmentCard = ({
   const [newTimeSlot,    setNewTimeSlot]    = useState("");
   const [reschedErr,     setReschedErr]     = useState("");
 
+  const {openLightbox} = useLightbox()
+
   // Re-check every minute so button activates without refresh
   const [, setTick] = useState(0);
   useEffect(() => {
@@ -133,6 +136,8 @@ const AppointmentCard = ({
 
     const patientId = a?.patient?._id;
 
+    console.log(a)
+    const patientProfileImage = a?.patient?.personalInfo?.profileImage;
 
 
 
@@ -180,8 +185,11 @@ const AppointmentCard = ({
       <div className="p-5">
         {/* Top row */}
         <div className="flex items-start gap-4">
-          <div className="w-11 h-11 rounded-xl bg-[#274760]/8 flex items-center justify-center shrink-0 text-[#274760] font-bold text-sm">
+            <div className="w-11 h-11 rounded-xl bg-[#274760]/8 flex items-center justify-center shrink-0 text-[#274760] font-bold text-sm">
+          {
+              patientProfileImage ? <img src={patientProfileImage} onClick={()=> patientProfileImage && openLightbox(patientProfileImage)} className="w-full h-full object-cover  rounded-xl" alt="" /> :
             {initials}
+          }
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-3">

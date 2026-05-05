@@ -11,6 +11,8 @@ import {
 import { formatDate } from "../../utils/commonUtils.js";
 import Spinner from "../../components/shared/Spinner.jsx";
 import { getInitials } from "../../utils/commonUtils.js";
+import { useLightbox } from "../../context/LightBoxContext.jsx";
+
 const calcAge = (dob) => {
     if (!dob) return null;
     const diff = Date.now() - new Date(dob).getTime();
@@ -423,6 +425,7 @@ const AppointmentRow = ({ appointment, onWritePrescription }) => {
 const DoctorPatientProfile = () => {
     const { patientId } = useParams();
     const navigate = useNavigate();
+    const {openLightbox} = useLightbox()
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -519,7 +522,7 @@ const DoctorPatientProfile = () => {
                     {/* Avatar */}
                     <div className="w-20 h-20 rounded-2xl shrink-0 overflow-hidden bg-[#274760]/8 border border-slate-100">
                         {profileImage
-                            ? <img src={profileImage} alt={name} className="w-full h-full object-cover object-top" />
+                            ? <img src={profileImage} onClick={()=> profileImage && openLightbox(profileImage)} alt={name} className="w-full h-full object-cover object-top" />
                             : <div className="w-full h-full flex items-center justify-center text-[#274760] font-bold text-2xl">{initials}</div>
                         }
                     </div>

@@ -9,6 +9,7 @@ import {
 } from "react-icons/fi";
 import { getDisplayName, getInitials } from "../../utils/commonUtils.js";
 import Spinner from "../../components/shared/Spinner.jsx";
+import { useLightbox } from "../../context/LightBoxContext.jsx";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -70,8 +71,8 @@ const SectionTitle = ({ children }) => (
 
 const DoctorProfile = () => {
   const { user } = useAuth();
-
-  const [loading, setLoading]           = useState(true);
+  const { openLightbox } = useLightbox()
+   const [loading, setLoading]           = useState(true);
   const [saving, setSaving]             = useState(false);
   const [editing, setEditing]           = useState(false);
   const [profileExists, setProfileExists] = useState(false);
@@ -283,7 +284,7 @@ const DoctorProfile = () => {
             {/* Avatar */}
             <div className="relative w-20 h-20 rounded-2xl shrink-0 overflow-hidden bg-[#274760]/8 shadow-sm">
               {avatarSrc ? (
-                <img src={avatarSrc} alt={displayName} className="w-full h-full object-cover" />
+                <img src={avatarSrc} onClick={()=> avatarSrc && openLightbox(avatarSrc)} alt={displayName} className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-[#274760] font-bold text-2xl">
                   {initials}
@@ -436,7 +437,7 @@ const DoctorProfile = () => {
                 <div>
                   <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Profile Photo</p>
                   {profile.doctorImage ? (
-                    <img src={profile.doctorImage} alt="Doctor"
+                    <img src={profile.doctorImage} onClick={()=> profile?.doctorImage && openLightbox(profile?.doctorImage)} alt="Doctor"
                       className="w-full h-36 object-cover rounded-xl border border-slate-100" />
                   ) : (
                     <div className="w-full h-36 rounded-xl bg-slate-50 border border-slate-100 border-dashed flex items-center justify-center">
@@ -448,8 +449,8 @@ const DoctorProfile = () => {
                 {/* Certificate preview */}
                 <div>
                   <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Certificate</p>
-                  {profile.certificateImage ? (
-                    <img src={profile.certificateImage} alt="Certificate"
+                  {profile?.certificateImage ? (
+                    <img src={profile?.certificateImage} onClick={()=> profile?.certificateImage && openLightbox(profile?.certificateImage)} alt="Certificate"
                       className="w-full h-36 object-cover rounded-xl border border-slate-100" />
                   ) : (
                     <div className="w-full h-36 rounded-xl bg-slate-50 border border-slate-100 border-dashed flex items-center justify-center">

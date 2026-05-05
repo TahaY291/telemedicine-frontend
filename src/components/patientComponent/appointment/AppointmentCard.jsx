@@ -6,6 +6,7 @@ import { FiCalendar ,FiClock , FiVideo , FiDollarSign ,FiLock, FiCheck , FiAlert
 import { formatDate } from "../../../utils/commonUtils";
 import { FiX } from "react-icons/fi";
 import Spinner from "../../shared/Spinner";
+import { useLightbox } from "../../../context/LightBoxContext";
 
 export const AppointmentCard = ({ appointment: a, onCancel, onJoinCall, onPay, payingId  }) => {
     const [tick, setTick] = useState(0);
@@ -13,6 +14,8 @@ export const AppointmentCard = ({ appointment: a, onCancel, onJoinCall, onPay, p
         const id = setInterval(() => setTick(t => t + 1), 60_000);
         return () => clearInterval(id);
     }, []);
+
+    const { openLightbox } = useLightbox();
 
     const doctorName = a?.doctor?.userId?.username || "Doctor";
     const specialization = a?.doctor?.specialization || "";
@@ -51,7 +54,7 @@ export const AppointmentCard = ({ appointment: a, onCancel, onJoinCall, onPay, p
                 <div className="flex items-start gap-4">
                     <div className="w-11 h-11 rounded-xl bg-[#274760]/8 flex items-center justify-center shrink-0 text-[#274760] font-bold text-sm overflow-hidden">
                         {a?.doctor?.doctorImage
-                            ? <img src={a.doctor.doctorImage} alt={doctorName} className="w-full h-full object-cover" />
+                            ? <img src={a?.doctor?.doctorImage} onClick={()=> openLightbox(a?.doctor?.doctorImage)} alt={doctorName} className="w-full h-full object-cover" />
                             : initials
                         }
                     </div>

@@ -10,6 +10,7 @@ import { Field, InfoRow, Tag, inputCls } from "../../components/patientComponent
 import RefreshBanner from "../../components/shared/RefreshBanner.jsx";
 import { formatDate, getInitials } from "../../utils/commonUtils.js";
 import Spinner from "../../components/shared/Spinner.jsx";
+import { useLightbox } from "../../context/LightBoxContext.jsx";
 
 const TABS = ["Personal", "Medical", "Emergency"];
 
@@ -54,6 +55,7 @@ const getCompleteness = (profile, form, isEditing) => {
 
 const PatientProfile = () => {
   const { user, setUser } = useAuth();
+  const {openLightbox} = useLightbox()
 
   const [profile, setProfile] = useState(null);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -303,7 +305,7 @@ const PatientProfile = () => {
                   <div className="w-20 h-20 rounded-2xl border-3 border-white bg-[#274760]/10 overflow-hidden shadow-md flex items-center justify-center"
                        style={{ border: "3px solid white" }}>
                     {avatarSrc ? (
-                      <img src={avatarSrc} alt={headlineName} className="w-full h-full object-cover" />
+                      <img src={avatarSrc} alt={headlineName} onClick={()=> avatarSrc && openLightbox(avatarSrc)} className="w-full h-full object-cover" />
                     ) : (
                       <span className="text-[#274760] font-bold text-2xl">{initials}</span>
                     )}
