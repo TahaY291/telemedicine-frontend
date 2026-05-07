@@ -5,6 +5,7 @@ import {
 } from "react-icons/fi";
 import DoctorPatientCard from "../../components/doctorComponent/DoctorPatientCard.jsx";
 import DoctorPatientDrawer from "../../components/doctorComponent/Doctorpatientdrawer.jsx";
+import RefreshBanner from "../../components/shared/RefreshBanner.jsx";
 
 const DoctorPatients = () => {
   const [loading, setLoading]       = useState(true);
@@ -42,25 +43,13 @@ const DoctorPatients = () => {
     <div className="max-w-6xl mx-auto px-4 py-6">
 
       {/* ── Header ── */}
-      <div className="flex items-center justify-between mb-5">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight">My Patients</h1>
-          <p className="text-sm text-slate-400 mt-0.5">
-            {loading
-              ? "Loading…"
-              : `${filtered.length} patient${filtered.length !== 1 ? "s" : ""} consulted`
-            }
-          </p>
-        </div>
-        <button
-          onClick={load}
-          disabled={loading}
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-500 text-sm font-medium hover:bg-slate-50 disabled:opacity-50 transition-colors"
-        >
-          <FiRefreshCw size={13} className={loading ? "animate-spin" : ""} />
-          <span className="hidden sm:inline">Refresh</span>
-        </button>
-      </div>
+
+              <RefreshBanner
+          tabName={"My Patient"}
+          text={`${filtered.length} patient${filtered.length !== 1 ? "s" : ""} consulted`}
+          onClick={() => load()}
+          initialLoading={loading}
+        />
 
       {/* ── Error ── */}
       {error && (

@@ -167,7 +167,7 @@ const DoctorDashboard = () => {
       {!loading && stats && (
         <>
 
-          <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <section className="grid grid-cols-2 max-md:grid-cols-1 lg:grid-cols-4 gap-4">
             <StatCard icon={FiCalendar} label="Total Appointments" value={stats.totalAppointments} sub="All time" accent />
             <StatCard icon={FiCheckCircle} label="Completed" value={stats.completedCount} sub="Finished visits" iconBg="bg-emerald-50" iconColor="text-emerald-600" />
             <StatCard icon={FiUsers} label="Total Patients" value={stats.totalPatients} sub="Unique patients" iconBg="bg-blue-50" iconColor="text-blue-600" />

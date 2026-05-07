@@ -10,6 +10,7 @@ import { useAuth } from "../../context/AuthContext.jsx";
 import AppointmentCard from '../../components/doctorComponent/AppointmentCard.jsx'
 import Spinner from "../../components/shared/Spinner.jsx";
 import ErrorBanner from "../../components/shared/ErrorBanner.jsx";
+import RefreshBanner from  '../../components/shared/RefreshBanner.jsx'
 
 
 const TAB_ORDER = ["pending", "approved", "rescheduled", "cancelled", "completed", "expired"];
@@ -124,17 +125,15 @@ const DoctorAppointments = () => {
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-5">
 
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Appointments</h1>
-            <p className="text-sm text-slate-400 mt-0.5">Review and manage patient appointment requests</p>
-          </div>
-          <button onClick={load} disabled={loading}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-500 text-sm font-medium hover:bg-slate-50 disabled:opacity-50 transition-colors">
-            <FiRefreshCw size={13} className={loading ? "animate-spin" : ""} />
-            Refresh
-          </button>
-        </div>
+
+        <RefreshBanner
+          tabName={"Appointments"}
+          text={"Review and manage patient appointment requests"}
+          onClick={() => load()}
+          initialLoading={loading}
+        />
+
+
 
         {/* Status tabs */}
         <div className="flex gap-1.5 flex-wrap">

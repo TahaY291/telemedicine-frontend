@@ -14,6 +14,7 @@ import {
 } from "react-icons/fi";
 import api from "../../api/axios.js";
 import { useAuth } from "../../context/AuthContext.jsx";
+import { ProHealthLogo } from "../shared/Logo.jsx";
 
 const navItems = [
   { to: "/doctor", icon: FiHome, label: "Dashboard" },
@@ -85,18 +86,18 @@ const DoctorSidebar = () => {
         </div>
       )}
 
-      <div className="flex items-center justify-center md:justify-start gap-3 px-1 md:px-2 mb-8 relative z-10">
-        <div className="flex items-center justify-center w-10 h-10 rounded-2xl bg-[#274760] shadow-lg shadow-[#274760]/30 shrink-0">
-          <FiActivity size={20} className="text-white" />
-        </div>
-        <div className="hidden md:block">
-          <p className="text-base font-semibold text-[#274760] tracking-wide">
-            MediCare
-          </p>
-          <p className="text-[11px] font-medium text-[#274760]/50 uppercase tracking-widest">
-            Doctor Portal
-          </p>
-        </div>
+        <div className="flex items-center justify-center md:justify-start gap-3 px-1 md:px-2 mb-8 relative z-10">
+        <Link to="/" className="shrink-0 flex items-center gap-2.5 text-[#274760]">
+          <ProHealthLogo />
+          <div className="flex flex-col leading-none max-md:hidden ">
+            <span className="text-xl font-extrabold tracking-tight text-[#274760]">
+              Pro<span className="text-[#4a90b8]">Health</span>
+            </span>
+            <span className="text-[9px] font-semibold tracking-[0.18em] uppercase text-slate-400">
+              Medical Care
+            </span>
+          </div>
+        </Link>
       </div>
 
       <div className="flex items-center justify-center md:justify-start gap-3 bg-white/50 backdrop-blur-sm border border-white/70 rounded-2xl p-2 md:p-3 mb-7 relative z-10 shadow-sm">

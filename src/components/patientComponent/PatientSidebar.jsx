@@ -70,7 +70,7 @@ const PatientSidebar = () => {
       <div className="flex items-center justify-center md:justify-start gap-3 px-1 md:px-2 mb-8 relative z-10">
         <Link to="/" className="shrink-0 flex items-center gap-2.5 text-[#274760]">
           <ProHealthLogo />
-          <div className="flex flex-col leading-none">
+          <div className="flex flex-col leading-none max-md:hidden ">
             <span className="text-xl font-extrabold tracking-tight text-[#274760]">
               Pro<span className="text-[#4a90b8]">Health</span>
             </span>

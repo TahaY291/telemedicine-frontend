@@ -6,6 +6,7 @@ import {
   FiAlertCircle, FiCheck, FiRefreshCw,
 } from "react-icons/fi";
 import { getInitials } from "../../utils/commonUtils.js";
+import { useLightbox } from "../../context/LightBoxContext.jsx";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -70,6 +71,8 @@ const DoctorPatientDrawer = ({ patientId, onClose }) => {
   const [error, setError]         = useState("");
   const [data, setData]           = useState(null);
   const [activeTab, setActiveTab] = useState("info");
+
+  const {openLightbox} = useLightbox()
 
   const load = useCallback(async () => {
     if (!patientId) return;
@@ -137,7 +140,7 @@ const DoctorPatientDrawer = ({ patientId, onClose }) => {
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top accent bar */}
-        <div className="h-1 bg-gradient-to-r from-[#274760] to-[#3a7ca5] shrink-0" />
+        <div className="h-1 bg-linear-to-r from-[#274760] to-[#3a7ca5] shrink-0" />
 
         {/* ── Header ── */}
         <div className="flex items-center gap-3 px-4 py-3 sm:px-5 sm:py-4 bg-white border-b border-slate-100 shrink-0">
@@ -146,7 +149,7 @@ const DoctorPatientDrawer = ({ patientId, onClose }) => {
             {loading ? (
               <div className="w-full h-full bg-[#274760]/60 animate-pulse" />
             ) : profileImage ? (
-              <img src={profileImage} alt={name} className="w-full h-full object-cover" />
+              <img src={profileImage} alt={name} onClick={()=> profileImage && openLightbox(profileImage)} className="w-full h-full object-cover" />
             ) : initials}
           </div>
 
@@ -201,7 +204,7 @@ const DoctorPatientDrawer = ({ patientId, onClose }) => {
               <Icon size={11} />
               {label}
               {count != null && !loading && (
-                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center ${
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-4.5 text-center ${
                   activeTab === id ? "bg-[#274760] text-white" : "bg-slate-200 text-slate-500"
                 }`}>
                   {count}
@@ -391,7 +394,7 @@ const DoctorPatientDrawer = ({ patientId, onClose }) => {
                                   <p className="text-[11px] text-slate-400 mt-0.5">{m.dosage} · {m.duration}</p>
                                 </div>
                                 {m.instructions && (
-                                  <p className="text-[11px] text-slate-400 text-right shrink-0 max-w-[90px] leading-relaxed">{m.instructions}</p>
+                                  <p className="text-[11px] text-slate-400 text-right shrink-0 max-w-22.5 leading-relaxed">{m.instructions}</p>
                                 )}
                               </div>
                             ))}

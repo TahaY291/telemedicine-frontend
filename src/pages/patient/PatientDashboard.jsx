@@ -132,7 +132,7 @@ const PatientDashboard = () => {
             </div>
           </div>
 
-          <div className="mt-4 grid grid-cols-3 gap-3 text-xs">
+          <div className="mt-4 grid max-sm:grid-cols-2 grid-cols-3 gap-3 text-xs">
             <div className="rounded-xl bg-white/10 border border-white/10 px-3 py-2">
               <p className="uppercase tracking-[0.18em] text-[10px] text-white/70">
                 Upcoming

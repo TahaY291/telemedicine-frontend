@@ -10,6 +10,8 @@ import {
 import { getDisplayName, getInitials } from "../../utils/commonUtils.js";
 import Spinner from "../../components/shared/Spinner.jsx";
 import { useLightbox } from "../../context/LightBoxContext.jsx";
+import RefreshBanner from "../../components/shared/RefreshBanner.jsx";
+import DoctorProfileSkeleton from "../../components/doctorComponent/DoctorProfileSkeleton.jsx";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -229,9 +231,9 @@ const DoctorProfile = () => {
 
   if (loading) {
     return (
-      <div className="rounded-2xl border border-slate-200 bg-white p-10 flex items-center justify-center gap-3">
-        <Spinner/>
+      <div className="rounded-2xl border border-slate-200 bg-white p-10 flex flex-col items-center justify-center gap-3">
         <p className="text-sm text-slate-500 font-medium">Loading profile…</p>
+        <DoctorProfileSkeleton/>
       </div>
     );
   }
@@ -241,21 +243,13 @@ const DoctorProfile = () => {
   return (
     <div className="max-w-5xl mx-auto px-4 py-6">
 
-      {/* ── Page header ── */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Doctor Profile</h1>
-          <p className="text-sm text-slate-400 mt-0.5">Your professional profile & availability</p>
-        </div>
-        <button
-          onClick={load}
-          disabled={loading || saving}
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-500 text-sm font-medium hover:bg-slate-50 disabled:opacity-50 transition-colors"
-        >
-          <FiRefreshCw size={13} className={loading ? "animate-spin" : ""} />
-          Refresh
-        </button>
-      </div>
+          <RefreshBanner
+          tabName={"Doctor Profile"}
+          text={`Your professional profile & availability`}
+          onClick={() => load()}
+          initialLoading={loading}
+        />
+
 
       {/* ── Toast ── */}
       {message.text && (
