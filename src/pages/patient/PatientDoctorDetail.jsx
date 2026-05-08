@@ -213,28 +213,32 @@ useEffect(() => {
     }
   }, [appointmentDate, fetchBookedSlots]);
 
-  // ── Submit ───────────────────────────────────────────────────────────────
   const submitAppointment = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     setError("");
     setSuccess("");
     try {
-      const { data } = await api.post("/appointments/create-appointment", {
-        doctorId,
-        appointmentDate,
-        timeSlot,
-        consultationType: "video",
-        reasonForVisit,
-      });
-      setSuccess(data?.message || "Appointment request sent!");
-      navigate("/patient/appointments?status=pending", { replace: false });
+        // ← FIX: append noon time so UTC conversion never rolls back to yesterday
+        // "2026-05-08" + "T12:00:00" = 2026-05-08T12:00:00 local time
+        // Even after UTC conversion (UTC+5 → UTC-5) it stays on the same date
+        const safeDateString = `${appointmentDate}T12:00:00`;
+
+        const { data } = await api.post("/appointments/create-appointment", {
+            doctorId,
+            appointmentDate: safeDateString,  // ← FIXED
+            timeSlot,
+            consultationType: "video",
+            reasonForVisit,
+        });
+        setSuccess(data?.message || "Appointment request sent!");
+        navigate("/patient/appointments?status=pending", { replace: false });
     } catch (err) {
-      setError(err?.response?.data?.message || "Failed to request appointment.");
+        setError(err?.response?.data?.message || "Failed to request appointment.");
     } finally {
-      setSubmitting(false);
+        setSubmitting(false);
     }
-  };
+};
 
   // ── Loading / error guards ───────────────────────────────────────────────
   if (loading) return (

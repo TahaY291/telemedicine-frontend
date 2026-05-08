@@ -89,8 +89,6 @@ const TabBtn = ({ tab, active, onClick, count }) => {
   );
 };
 
-
-
 const SummaryStrip = ({ items }) => {
   const counts = useMemo(() => {
     const c = {};
@@ -150,6 +148,7 @@ const PatientAppointments = () => {
   const [tabCounts, setTabCounts]   = useState({});
   const [activeCall, setActiveCall] = useState(null);
   const [payingId, setPayingId]     = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0); // ← ADDED
 
   // ── Fetch ────────────────────────────────────────────────────────────────
 
@@ -164,7 +163,9 @@ const PatientAppointments = () => {
       if (tab === "all") {
         const results = await Promise.allSettled(
           STATUSES.map((s) =>
-            api.get("/appointments/patient-appointments", { params: { status: s } })
+            api.get("/appointments/patient-appointments", {
+              params: { status: s, _t: Date.now() }, // ← CACHE BUST
+            })
           )
         );
         const merged = results.flatMap((r, i) => {
@@ -172,14 +173,13 @@ const PatientAppointments = () => {
           return data.map((a) => ({ ...a, _tabStatus: STATUSES[i] }));
         });
 
-        // Build counts for all tab badges in one shot
         const counts = { all: merged.length };
         for (const a of merged) counts[a.status] = (counts[a.status] || 0) + 1;
         setTabCounts(counts);
         setItems(sortByTime(merged));
       } else {
         const { data } = await api.get("/appointments/patient-appointments", {
-          params: { status: tab },
+          params: { status: tab, _t: Date.now() }, // ← CACHE BUST
         });
         setItems(sortByTime(data?.data || []));
       }
@@ -190,7 +190,8 @@ const PatientAppointments = () => {
     }
   };
 
-  useEffect(() => { load(activeTab); }, [activeTab]); // eslint-disable-line
+  // ← FIXED: depends on both activeTab and refreshKey
+  useEffect(() => { load(activeTab); }, [activeTab, refreshKey]); // eslint-disable-line
 
   // ── Actions ──────────────────────────────────────────────────────────────
 
@@ -269,13 +270,12 @@ const PatientAppointments = () => {
         <RefreshBanner
           tabName={"My Appointments"}
           text={"Track and manage your consultation requests"}
-          onClick={() => load(activeTab)}
+          onClick={() => setRefreshKey((k) => k + 1)} // ← FIXED
           initialLoading={loading}
         />
 
         {/* ── Tab strip ── */}
         <div className="bg-white border border-slate-200 rounded-2xl p-2 shadow-sm">
-          {/* mobile: horizontal scroll  |  sm+: wrap */}
           <div
             className="flex gap-1.5 overflow-x-auto sm:flex-wrap sm:overflow-x-visible"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
@@ -308,7 +308,6 @@ const PatientAppointments = () => {
         ) : (
           <div className="space-y-2">
 
-            {/* Meta: count + summary pills */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-1 mb-1">
               {metaLabel && (
                 <p className="text-xs text-slate-400 font-semibold">{metaLabel}</p>
@@ -316,7 +315,6 @@ const PatientAppointments = () => {
               {activeTab === "all" && <SummaryStrip items={items} />}
             </div>
 
-            {/* "All" tab → flat time-sorted list */}
             {activeTab === "all"
               ? items.map((a) => (
                   <AppointmentCard
@@ -329,7 +327,6 @@ const PatientAppointments = () => {
                     showStatusBadge={true}
                   />
                 ))
-              /* Single-status tabs */
               : items.map((a) => (
                   <AppointmentCard
                     key={a._id}

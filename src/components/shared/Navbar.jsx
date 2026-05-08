@@ -44,6 +44,14 @@ const Navbar = () => {
                             {link.name}
                         </Link>
                     ))}
+                    <a
+                        href="YOUR_ADMIN_URL_HERE"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:text-[#4a90b8] transition-colors"
+                    >
+                        Admin
+                    </a>
                 </div>
 
                 {/* Desktop CTA buttons */}
@@ -85,6 +93,14 @@ const Navbar = () => {
                         {link.name}
                     </Link>
                 ))}
+                <a
+                    href="YOUR_ADMIN_URL_HERE"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-lg text-[#274760] border-b border-gray-50 pb-2"
+                >
+                    Admin
+                </a>
                 <div className="flex flex-col gap-3 mt-4">
                     <Link to="/patient-login" onClick={() => setRole('patient')}>
                         <button className="px-5 py-2 border border-[#274760] text-[#274760] rounded-full w-full">

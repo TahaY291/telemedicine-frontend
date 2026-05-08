@@ -235,13 +235,13 @@ const Doctors = () => {
               )}
 
               <select value={specialization} onChange={(e) => setSpecialization(e.target.value)}
-                className={`${selectCls} min-w-[150px]`}>
+                className={`${selectCls} min-w-37.5`}>
                 <option value="">All specializations</option>
                 {uniqueSpecializations.map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
 
               <select value={city} onChange={(e) => setCity(e.target.value)}
-                className={`${selectCls} min-w-[120px]`}>
+                className={`${selectCls} min-w-30`}>
                 <option value="">All cities</option>
                 {uniqueCities.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
@@ -275,7 +275,7 @@ const Doctors = () => {
 
               {/* Availability day */}
               <select value={daySlot} onChange={(e) => { setDaySlot(e.target.value); setTimeSlot(""); }}
-                className={`${selectCls} min-w-[130px]`}>
+                className={`${selectCls} min-w-32.5`}>
                 <option value="">Any day</option>
                 {DAYS.map((d) => <option key={d} value={d}>{d}</option>)}
               </select>

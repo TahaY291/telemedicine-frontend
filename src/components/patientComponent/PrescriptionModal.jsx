@@ -169,7 +169,7 @@ const PrescriptionModal = ({ prescription, doctor, patient, isOpen, onClose }) =
 
       <div
         id="rx-modal-root"
-        className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-sm"
+        className="fixed inset-0 z-60 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-sm"
         onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
       >
         {/* modal shell */}
@@ -199,7 +199,7 @@ const PrescriptionModal = ({ prescription, doctor, patient, isOpen, onClose }) =
 
           {/* scrollable prescription body */}
           <div className="overflow-y-auto flex-1">
-            <div ref={printRef} className="rx-paper rx-redmargin relative min-h-[600px]" style={{ padding: "32px 36px 40px 48px" }}>
+            <div ref={printRef} className="rx-paper rx-redmargin relative min-h-150" style={{ padding: "32px 36px 40px 48px" }}>
 
               {/* watermark */}
               <div className="rx-watermark"><span>Rx</span></div>
@@ -323,7 +323,7 @@ const PrescriptionModal = ({ prescription, doctor, patient, isOpen, onClose }) =
               {/* ── SIGNATURE ROW ── */}
               <div className="mt-10 flex items-end justify-between">
                 {/* validity note */}
-                <p className="rx-serif text-[10px] italic max-w-[220px] leading-relaxed" style={{ color: "#cbd5e1" }}>
+                <p className="rx-serif text-[10px] italic max-w-55 leading-relaxed" style={{ color: "#cbd5e1" }}>
                   This prescription is generated electronically and is valid without a physical signature.
                 </p>
 
