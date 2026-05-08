@@ -45,7 +45,7 @@ const Navbar = () => {
                         </Link>
                     ))}
                     <a
-                        href="YOUR_ADMIN_URL_HERE"
+                        href="https://telemedicine-admin-black.vercel.app/"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="hover:text-[#4a90b8] transition-colors"
