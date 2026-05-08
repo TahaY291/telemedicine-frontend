@@ -22,6 +22,7 @@ import { getInitials } from "../../utils/commonUtils.js";
 import { todayLabel } from "../../utils/DashboardUtils.js";
 import { formatDate } from "../../utils/commonUtils.js";
 import { greeting } from "../../utils/DashboardUtils.js";
+import ErrorBanner from "../../components/shared/ErrorBanner.jsx";
 
 ChartJS.register(
   ArcElement, Tooltip, Legend,
@@ -159,10 +160,16 @@ const DoctorDashboard = () => {
     maintainAspectRatio: false,
   };
 
+
+
   return (
     <div className="max-w-6xl mx-auto space-y-6">
 
       <DashboardHero role={"Doctor"} todayLabel={todayLabel} displayName={displayName} stats={stats} greeting={greeting} initials={initials} load={load} loading={loading} />
+ 
+ {
+  error && <ErrorBanner error={error} />
+ }
 
       {!loading && stats && (
         <>

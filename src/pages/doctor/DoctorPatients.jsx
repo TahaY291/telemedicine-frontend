@@ -6,12 +6,13 @@ import {
 import DoctorPatientCard from "../../components/doctorComponent/DoctorPatientCard.jsx";
 import DoctorPatientDrawer from "../../components/doctorComponent/Doctorpatientdrawer.jsx";
 import RefreshBanner from "../../components/shared/RefreshBanner.jsx";
+import ErrorBanner from "../../components/shared/ErrorBanner.jsx";
 
 const DoctorPatients = () => {
-  const [loading, setLoading]       = useState(true);
-  const [error, setError]           = useState("");
-  const [patients, setPatients]     = useState([]);
-  const [search, setSearch]         = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [patients, setPatients] = useState([]);
+  const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState(null);
 
   const load = async () => {
@@ -33,9 +34,9 @@ const DoctorPatients = () => {
     if (!search.trim()) return true;
     const q = search.toLowerCase();
     return (
-      (p?.user?.username              || "").toLowerCase().includes(q) ||
+      (p?.user?.username || "").toLowerCase().includes(q) ||
       (p?.personalInfo?.address?.city || "").toLowerCase().includes(q) ||
-      (p?.phoneNumber                 || "").toLowerCase().includes(q)
+      (p?.phoneNumber || "").toLowerCase().includes(q)
     );
   });
 
@@ -44,18 +45,15 @@ const DoctorPatients = () => {
 
       {/* ── Header ── */}
 
-              <RefreshBanner
-          tabName={"My Patient"}
-          text={`${filtered.length} patient${filtered.length !== 1 ? "s" : ""} consulted`}
-          onClick={() => load()}
-          initialLoading={loading}
-        />
+      <RefreshBanner
+        tabName={"My Patient"}
+        text={`${filtered.length} patient${filtered.length !== 1 ? "s" : ""} consulted`}
+        onClick={() => load()}
+        initialLoading={loading}
+      />
 
-      {/* ── Error ── */}
       {error && (
-        <div className="flex items-start gap-3 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700 mb-4">
-          <FiAlertCircle size={15} className="mt-0.5 shrink-0" /> {error}
-        </div>
+        <ErrorBanner error={error} />
       )}
 
       {/* ── Search ── */}

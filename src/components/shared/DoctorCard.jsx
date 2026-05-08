@@ -10,8 +10,8 @@ const DoctorCard = ({ doctor , onClick }) => {
   const rating = doctor?.rating ?? 0;
   const totalReviews = doctor?.totalReviews ?? 0;
   const image = doctor?.doctorImage;
-  console.log(doctor.rating)
 
+  
   const initials = name
     .split(" ").filter(Boolean).slice(0, 2)
     .map((s) => s[0]?.toUpperCase()).join("") || "DR";

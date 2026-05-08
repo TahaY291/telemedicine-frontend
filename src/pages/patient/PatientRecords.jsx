@@ -43,7 +43,6 @@ const ConsultationDrawer = ({ consultation, onClose }) => {
         {/* Top accent bar */}
         <div className="h-1 bg-linear-to-r from-[#274760] to-[#3a7ca5] shrink-0" />
 
-        {/* Scrollable content — ConsultationDetailPanel handles its own header + body */}
         <div className="flex-1 overflow-y-auto">
           <ConsultationDetailPanel
             consultation={consultation}

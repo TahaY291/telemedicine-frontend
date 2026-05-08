@@ -117,6 +117,7 @@ const PatientProfile = () => {
       setEditing(false);
       setImagePreview(null);
     } catch (err) {
+      console.log(err.response)
       if (err?.response?.status === 404) {
         setProfile(null);
         setEditing(true);
