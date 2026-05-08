@@ -33,7 +33,7 @@ export const NotificationProvider = ({ children }) => {
     const MAX_RETRIES = 5;
 
     const connect = () => {
-      es = new EventSource("/api/v1/notifications/stream", { withCredentials: true });
+      es = new EventSource(`${import.meta.env.VITE_BACKEND_URL}/api/v1/notifications/stream`, { withCredentials: true });
 
       es.onopen = () => {
         retryCount = 0;
