@@ -20,7 +20,7 @@ export const SocketProvider = ({ children }) => {
       return;
     }
 
-    const s = io("http://localhost:8000", {
+    const s = io(import.meta.env.VITE_BACKEND_URL, {
       withCredentials: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
