@@ -20,7 +20,7 @@ export const SocketProvider = ({ children }) => {
       return;
     }
 
-    const s = io("http://localhost:8000", {
+    const s = io("https://telemedicine-backend-g93n.onrender.com", {
       withCredentials: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
