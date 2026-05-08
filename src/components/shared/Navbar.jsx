@@ -94,7 +94,7 @@ const Navbar = () => {
                     </Link>
                 ))}
                 <a
-                    href="YOUR_ADMIN_URL_HERE"
+                    href="https://telemedicine-admin-black.vercel.app/"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-lg text-[#274760] border-b border-gray-50 pb-2"

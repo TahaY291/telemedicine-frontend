@@ -1,5 +1,5 @@
 import React from 'react'
-
+import hero_image from '../../assets/assets_frontend/header_img.png'
 const Hero = () => {
   return (
     <div className='pt-32 hero-bg-clr flex flex-col md:flex-row flex-wrap bg-primary rounded-lg px-6 md:px-10 lg:px-20 '>
@@ -22,7 +22,7 @@ const Hero = () => {
         {/* RIGHT IMAGE */}
         <div className='md:w-1/2 relative'>
             <img 
-              src="/src/assets/assets_frontend/header_img.png" 
+              src={hero_image} 
               alt="Hero Image" 
               className="w-full md:absolute bottom-0 h-auto rounded-lg"
             />
