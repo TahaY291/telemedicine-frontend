@@ -10,7 +10,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "https://telemedicine-backend-g93n.onrender.com",  // ✓ correct format
+        target: "http://localhost:8000",  // ✓ correct format
         changeOrigin: true,
       },
     },
