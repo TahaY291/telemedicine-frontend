@@ -138,17 +138,10 @@ npm run dev
 
 ### 2. Environment Variables
 
-Create a `.env` file in the **backend** root:
+Create a `.env` file in the **frontend** root:
 
 ```env
-MONGO_URI=your_mongodb_connection_string
-JWT_SECRET=your_jwt_secret
-CLOUDINARY_CLOUD_NAME=your_cloudinary_name
-CLOUDINARY_API_KEY=your_cloudinary_api_key
-CLOUDINARY_API_SECRET=your_cloudinary_api_secret
-EMAIL_USER=your_gmail_address
-EMAIL_PASS=your_gmail_app_password
-CLIENT_URL=http://localhost:5173
+VITE_BACKEND_URL=your backend url
 ```
 
 > ⚠️ **Never commit your `.env` file.** Add it to `.gitignore`.
