@@ -105,24 +105,27 @@ const PatientDashboard = () => {
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 rounded-2xl bg-linear-to-r from-[#274760] via-[#33597A] to-[#4A7BA4] text-white p-5 shadow-sm">
           <div className="flex items-start justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-2xl bg-white/10 flex items-center justify-center shadow-sm">
+            {/* FIX: added min-w-0 so the flex child can shrink and truncate properly */}
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="h-10 w-10 shrink-0 rounded-2xl bg-white/10 flex items-center justify-center shadow-sm">
                 <FiActivity size={20} />
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-xs uppercase tracking-[0.2em] text-white/70">
                   Welcome back
                 </p>
-                <h2 className="text-xl font-semibold leading-snug">
+                {/* FIX: truncate long display names instead of overflowing */}
+                <h2 className="text-xl font-semibold leading-snug truncate">
                   {displayName}
                 </h2>
-                <p className="text-xs mt-1 text-white/80">
+                {/* FIX: allow "Today is …" line to wrap naturally on xs */}
+                <p className="text-xs mt-1 text-white/80 wrap-break-words">
                   Today is <span className="font-medium">{todayLabel}</span>. Manage
                   your health at a glance.
                 </p>
               </div>
             </div>
-            <div className="hidden sm:flex items-center gap-2 bg-white/10 rounded-full px-3 py-1 text-xs">
+            <div className="hidden sm:flex shrink-0 items-center gap-2 bg-white/10 rounded-full px-3 py-1 text-xs">
               <div className="h-6 w-6 rounded-full bg-white/20 flex items-center justify-center text-[11px] font-semibold">
                 {initials}
               </div>
@@ -132,28 +135,39 @@ const PatientDashboard = () => {
             </div>
           </div>
 
-          <div className="mt-4 grid max-sm:grid-cols-2 grid-cols-3 gap-3 text-xs">
-            <div className="rounded-xl bg-white/10 border border-white/10 px-3 py-2">
-              <p className="uppercase tracking-[0.18em] text-[10px] text-white/70">
+          {/*
+            FIX: On the smallest screens use 2 columns so each stat tile has
+            more room and numbers/labels don't overflow. 3 columns from sm up.
+          */}
+          <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+            <div className="rounded-xl bg-white/10 border border-white/10 px-3 py-2 min-w-0">
+              {/* FIX: truncate label text so it never pushes the tile wider */}
+              <p className="uppercase tracking-[0.18em] text-[10px] text-white/70 truncate">
                 Upcoming
               </p>
-              <p className="mt-1 text-lg font-semibold">
+              {/* FIX: slightly smaller on xs, grows to lg on sm+ */}
+              <p className="mt-1 text-base sm:text-lg font-semibold">
                 {stats.upcoming}
               </p>
             </div>
-            <div className="rounded-xl bg-white/10 border border-white/10 px-3 py-2">
-              <p className="uppercase tracking-[0.18em] text-[10px] text-white/70">
+            <div className="rounded-xl bg-white/10 border border-white/10 px-3 py-2 min-w-0">
+              <p className="uppercase tracking-[0.18em] text-[10px] text-white/70 truncate">
                 Completed
               </p>
-              <p className="mt-1 text-lg font-semibold">
+              <p className="mt-1 text-base sm:text-lg font-semibold">
                 {stats.completed}
               </p>
             </div>
-            <div className="rounded-xl bg-white/10 border border-white/10 px-3 py-2">
-              <p className="uppercase tracking-[0.18em] text-[10px] text-white/70">
+            {/*
+              FIX: The third stat ("Total visits") was the one getting cut off
+              on 2-col layout. It now wraps to the next row on xs (col-span-2
+              so it's centred / full-width), and sits in the 3rd column on sm+.
+            */}
+            <div className="rounded-xl bg-white/10 border border-white/10 px-3 py-2 min-w-0 col-span-2 sm:col-span-1">
+              <p className="uppercase tracking-[0.18em] text-[10px] text-white/70 truncate">
                 Total visits
               </p>
-              <p className="mt-1 text-lg font-semibold">
+              <p className="mt-1 text-base sm:text-lg font-semibold">
                 {stats.total}
               </p>
             </div>
@@ -166,15 +180,16 @@ const PatientDashboard = () => {
             to="/patient/appointments"
             className="rounded-2xl border border-slate-200 bg-white px-4 py-3 flex items-center justify-between hover:border-[#274760]/40 hover:shadow-sm transition"
           >
-            <div className="flex items-center gap-2">
-              <span className="h-9 w-9 rounded-xl bg-[#274760]/10 text-[#274760] flex items-center justify-center">
+            {/* FIX: min-w-0 so the text column shrinks instead of overflowing */}
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="h-9 w-9 shrink-0 rounded-xl bg-[#274760]/10 text-[#274760] flex items-center justify-center">
                 <FiCalendar size={18} />
               </span>
-              <div>
-                <p className="text-sm font-semibold text-[#274760]">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-[#274760] truncate">
                   Book appointment
                 </p>
-                <p className="text-[11px] text-gray-500">
+                <p className="text-[11px] text-gray-500 truncate">
                   Find a doctor and schedule a visit
                 </p>
               </div>
@@ -185,15 +200,15 @@ const PatientDashboard = () => {
             to="/patient/profile"
             className="rounded-2xl border border-slate-200 bg-white px-4 py-3 flex items-center justify-between hover:border-[#274760]/40 hover:shadow-sm transition"
           >
-            <div className="flex items-center gap-2">
-              <span className="h-9 w-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="h-9 w-9 shrink-0 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
                 <FiUser size={18} />
               </span>
-              <div>
-                <p className="text-sm font-semibold text-[#274760]">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-[#274760] truncate">
                   Update profile
                 </p>
-                <p className="text-[11px] text-gray-500">
+                <p className="text-[11px] text-gray-500 truncate">
                   Keep your medical details current
                 </p>
               </div>
@@ -218,22 +233,22 @@ const PatientDashboard = () => {
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="lg:col-span-2 rounded-2xl border border-slate-200 bg-white p-5">
             <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <span className="h-8 w-8 rounded-xl bg-[#274760]/10 text-[#274760] flex items-center justify-center">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="h-8 w-8 shrink-0 rounded-xl bg-[#274760]/10 text-[#274760] flex items-center justify-center">
                   <FiClock size={16} />
                 </span>
-                <div>
+                <div className="min-w-0">
                   <p className="text-sm font-semibold text-[#274760]">
                     Next appointment
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-gray-500 truncate">
                     Your nearest upcoming approved or pending visit
                   </p>
                 </div>
               </div>
               <Link
                 to="/patient/appointments"
-                className="text-xs font-medium text-[#274760] hover:underline"
+                className="shrink-0 ml-2 text-xs font-medium text-[#274760] hover:underline"
               >
                 View all
               </Link>
@@ -241,25 +256,31 @@ const PatientDashboard = () => {
 
             {nextAppointment ? (
               <div className="rounded-xl border border-slate-200 bg-slate-50/60 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div>
-                  <p className="text-sm font-semibold text-[#274760]">
+                {/* FIX: min-w-0 lets the left column shrink on narrow screens */}
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-[#274760] truncate">
                     {nextAppointment.doctor?.specialization || "Doctor visit"}
                   </p>
-                  <p className="text-xs text-gray-600 mt-0.5">
+                  <p className="text-xs text-gray-600 mt-0.5 truncate">
                     With{" "}
                     <span className="font-medium">
                       {nextAppointment.doctor?.userId?.username ||
                         "Assigned doctor"}
                     </span>
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-gray-500 mt-1 truncate">
                     Reason:{" "}
                     <span className="font-medium">
                       {nextAppointment.reasonForVisit || "Not specified"}
                     </span>
                   </p>
                 </div>
-                <div className="text-right text-xs">
+                {/*
+                  FIX: shrink-0 keeps the date/time/badge from collapsing;
+                  text-left on xs, text-right from sm so it looks correct in
+                  both stacked and side-by-side layouts.
+                */}
+                <div className="shrink-0 text-xs text-left sm:text-right">
                   <p className="font-semibold text-[#274760]">
                     {formatDate(nextAppointment.appointmentDate)}
                   </p>
@@ -273,11 +294,11 @@ const PatientDashboard = () => {
                 </div>
               </div>
             ) : (
-              <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-5 text-sm text-gray-500 flex items-center justify-between">
+              <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-5 text-sm text-gray-500 flex items-center justify-between gap-3">
                 <span>You have no upcoming appointments.</span>
                 <Link
                   to="/patient/appointments"
-                  className="inline-flex items-center gap-1 text-[#274760] font-medium text-xs hover:underline"
+                  className="shrink-0 inline-flex items-center gap-1 text-[#274760] font-medium text-xs hover:underline"
                 >
                   <FiCalendar size={13} />
                   Book now
@@ -289,41 +310,41 @@ const PatientDashboard = () => {
           {/* Status summary */}
           <div className="rounded-2xl border border-slate-200 bg-white p-5">
             <div className="flex items-center gap-2 mb-4">
-              <span className="h-8 w-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <span className="h-8 w-8 shrink-0 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
                 <FiCheckCircle size={16} />
               </span>
-              <div>
-                <p className="text-sm font-semibold text-[#274760]">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-[#274760] truncate">
                   Appointment summary
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-gray-500 truncate">
                   Overall status of your visits
                 </p>
               </div>
             </div>
 
             <dl className="space-y-2 text-xs">
-              <div className="flex items-center justify-between">
-                <dt className="text-gray-600">Total appointments</dt>
-                <dd className="font-semibold text-[#274760]">
+              <div className="flex items-center justify-between gap-2">
+                <dt className="text-gray-600 truncate">Total appointments</dt>
+                <dd className="shrink-0 font-semibold text-[#274760]">
                   {stats.total}
                 </dd>
               </div>
-              <div className="flex items-center justify-between">
-                <dt className="text-gray-600">Upcoming</dt>
-                <dd className="font-semibold text-[#274760]">
+              <div className="flex items-center justify-between gap-2">
+                <dt className="text-gray-600 truncate">Upcoming</dt>
+                <dd className="shrink-0 font-semibold text-[#274760]">
                   {stats.upcoming}
                 </dd>
               </div>
-              <div className="flex items-center justify-between">
-                <dt className="text-gray-600">Completed</dt>
-                <dd className="font-semibold text-emerald-600">
+              <div className="flex items-center justify-between gap-2">
+                <dt className="text-gray-600 truncate">Completed</dt>
+                <dd className="shrink-0 font-semibold text-emerald-600">
                   {stats.completed}
                 </dd>
               </div>
-              <div className="flex items-center justify-between">
-                <dt className="text-gray-600">Cancelled</dt>
-                <dd className="font-semibold text-red-500">
+              <div className="flex items-center justify-between gap-2">
+                <dt className="text-gray-600 truncate">Cancelled</dt>
+                <dd className="shrink-0 font-semibold text-red-500">
                   {stats.cancelled}
                 </dd>
               </div>
@@ -336,11 +357,11 @@ const PatientDashboard = () => {
       {!loading && (
         <section className="rounded-2xl border border-slate-200 bg-white p-5">
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <span className="h-8 w-8 rounded-xl bg-[#274760]/10 text-[#274760] flex items-center justify-center">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="h-8 w-8 shrink-0 rounded-xl bg-[#274760]/10 text-[#274760] flex items-center justify-center">
                 <FiActivity size={16} />
               </span>
-              <div>
+              <div className="min-w-0">
                 <p className="text-sm font-semibold text-[#274760]">
                   Recent consultations
                 </p>
@@ -359,16 +380,17 @@ const PatientDashboard = () => {
             <ul className="divide-y divide-slate-100 text-sm">
               {consultations.map((c) => (
                 <li key={c._id} className="py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                  <div>
-                    <p className="font-semibold text-[#274760]">
+                  {/* FIX: min-w-0 prevents doctor name from overflowing */}
+                  <div className="min-w-0">
+                    <p className="font-semibold text-[#274760] truncate">
                       {c.doctorId?.userId?.username || "Doctor consultation"}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-gray-500 truncate">
                       {c.appointmentId?.consultationType || "Consultation"} ·{" "}
                       {formatDate(c.consultationDate)}
                     </p>
                     {c.prescriptionId?.diagnosis && (
-                      <p className="text-xs text-gray-500 mt-0.5">
+                      <p className="text-xs text-gray-500 mt-0.5 truncate">
                         Diagnosis:{" "}
                         <span className="font-medium">
                           {c.prescriptionId.diagnosis}
@@ -376,7 +398,11 @@ const PatientDashboard = () => {
                       </p>
                     )}
                   </div>
-                  <div className="text-xs text-right text-gray-500">
+                  {/*
+                    FIX: shrink-0 keeps the status badge from being crushed;
+                    text-left on xs (stacked), text-right from sm (side-by-side).
+                  */}
+                  <div className="shrink-0 text-xs text-left sm:text-right text-gray-500">
                     <p>
                       Status:{" "}
                       <span className="font-semibold text-[#274760]">

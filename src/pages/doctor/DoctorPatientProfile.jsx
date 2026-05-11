@@ -20,12 +20,12 @@ const calcAge = (dob) => {
 };
 
 const STATUS_META = {
-    pending: { label: "Pending", color: "bg-amber-50   text-amber-700  border-amber-200" },
-    approved: { label: "Approved", color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-    rescheduled: { label: "Rescheduled", color: "bg-blue-50    text-blue-700   border-blue-200" },
-    cancelled: { label: "Cancelled", color: "bg-red-50     text-red-700    border-red-200" },
-    completed: { label: "Completed", color: "bg-slate-100  text-slate-600  border-slate-200" },
-    expired: { label: "Expired", color: "bg-orange-50 text-orange-700 border-orange-200" },
+    pending:     { label: "Pending",     color: "bg-amber-50   text-amber-700  border-amber-200"   },
+    approved:    { label: "Approved",    color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+    rescheduled: { label: "Rescheduled", color: "bg-blue-50    text-blue-700   border-blue-200"    },
+    cancelled:   { label: "Cancelled",   color: "bg-red-50     text-red-700    border-red-200"     },
+    completed:   { label: "Completed",   color: "bg-slate-100  text-slate-600  border-slate-200"   },
+    expired:     { label: "Expired",     color: "bg-orange-50 text-orange-700 border-orange-200"   },
 };
 
 const CONSULT_ICON = { video: FiVideo, audio: FiMic, chat: FiMessageSquare };
@@ -34,7 +34,8 @@ const emptyMedicine = () => ({ name: "", dosage: "", duration: "", instructions:
 
 // ─── Atoms ────────────────────────────────────────────────────────────────────
 
-const inputCls = "w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#274760]/20 focus:border-[#274760] transition-all";
+const inputCls =
+    "w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#274760]/20 focus:border-[#274760] transition-all";
 
 const Tag = ({ children, color = "bg-slate-100 text-slate-600 border-slate-200" }) => (
     <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${color}`}>
@@ -45,32 +46,33 @@ const Tag = ({ children, color = "bg-slate-100 text-slate-600 border-slate-200" 
 const SectionCard = ({ icon: Icon, title, accent, children, action }) => (
     <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
         <div className={`h-1 w-full ${accent || "bg-[#274760]"}`} />
-        <div className="p-5">
+        <div className="p-4 sm:p-5">
             <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-2.5 min-w-0">
                     <div className="w-8 h-8 rounded-lg bg-[#274760]/8 flex items-center justify-center shrink-0">
                         <Icon size={14} className="text-[#274760]" />
                     </div>
-                    <h3 className="text-base font-bold text-slate-800">{title}</h3>
+                    <h3 className="text-base font-bold text-slate-800 truncate">{title}</h3>
                 </div>
-                {action}
+                {action && <div className="shrink-0 ml-2">{action}</div>}
             </div>
             {children}
         </div>
     </div>
 );
 
+// Responsive InfoRow: stacks label above value on very narrow screens
 const InfoRow = ({ label, value }) => (
-    <div className="flex items-start justify-between py-2 border-b border-slate-50 last:border-0">
-        <span className="text-xs font-bold text-slate-400 uppercase tracking-widest shrink-0 w-32">{label}</span>
-        <span className="text-sm font-semibold text-slate-700 text-right">{value || "—"}</span>
+    <div className="flex flex-col xs:flex-row xs:items-start xs:justify-between py-2 border-b border-slate-50 last:border-0 gap-0.5 xs:gap-2">
+        <span className="text-xs font-bold text-slate-400 uppercase tracking-widest shrink-0 xs:w-28">{label}</span>
+        <span className="text-sm font-semibold text-slate-700 xs:text-right wrap-break-words">{value || "—"}</span>
     </div>
 );
 
 const StatusBadge = ({ status }) => {
     const meta = STATUS_META[status] || STATUS_META.pending;
     return (
-        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold border uppercase tracking-wide ${meta.color}`}>
+        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold border uppercase tracking-wide whitespace-nowrap ${meta.color}`}>
             {meta.label}
         </span>
     );
@@ -91,9 +93,9 @@ const PrescriptionForm = ({ appointmentId, existingPrescription, onSaved, onCanc
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState("");
 
-    const addMedicine = () => setMedicines(p => [...p, emptyMedicine()]);
+    const addMedicine  = () => setMedicines(p => [...p, emptyMedicine()]);
     const removeMedicine = (i) => setMedicines(p => p.filter((_, idx) => idx !== i));
-    const onMedChange = (i, key) => (e) =>
+    const onMedChange  = (i, key) => (e) =>
         setMedicines(p => p.map((m, idx) => idx === i ? { ...m, [key]: e.target.value } : m));
 
     const submit = async (e) => {
@@ -118,7 +120,10 @@ const PrescriptionForm = ({ appointmentId, existingPrescription, onSaved, onCanc
     return (
         <form onSubmit={submit} className="space-y-4">
             {error && (
-                <ErrorBanner error={error} />
+                <div className="flex items-start gap-2 rounded-lg border border-red-100 bg-red-50 px-3 py-2.5 text-sm text-red-700">
+                    <FiAlertCircle size={14} className="mt-0.5 shrink-0" />
+                    {error}
+                </div>
             )}
 
             {/* Diagnosis */}
@@ -143,7 +148,7 @@ const PrescriptionForm = ({ appointmentId, existingPrescription, onSaved, onCanc
                         Medicines <span className="text-red-400">*</span>
                     </label>
                     <button type="button" onClick={addMedicine}
-                        className="inline-flex items-center gap-1 text-xs font-bold text-[#274760] hover:text-[#1e364a] transition-colors">
+                        className="inline-flex items-center gap-1 text-xs font-bold text-[#274760] hover:text-[#1e364a] transition-colors min-h-8 px-1">
                         <FiPlus size={12} /> Add
                     </button>
                 </div>
@@ -157,12 +162,13 @@ const PrescriptionForm = ({ appointmentId, existingPrescription, onSaved, onCanc
                                 </span>
                                 {medicines.length > 1 && (
                                     <button type="button" onClick={() => removeMedicine(i)}
-                                        className="text-red-400 hover:text-red-600 transition-colors">
+                                        className="text-red-400 hover:text-red-600 transition-colors p-1 min-h-8 min-w-8 flex items-center justify-center">
                                         <FiTrash2 size={13} />
                                     </button>
                                 )}
                             </div>
-                            <div className="grid grid-cols-2 gap-2">
+                            {/* 1-col on mobile, 2-col on sm+ */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                 <input value={m.name} onChange={onMedChange(i, "name")}
                                     placeholder="Medicine name" className={inputCls} required />
                                 <input value={m.dosage} onChange={onMedChange(i, "dosage")}
@@ -194,14 +200,14 @@ const PrescriptionForm = ({ appointmentId, existingPrescription, onSaved, onCanc
             {/* Actions */}
             <div className="flex gap-2 pt-1">
                 <button type="submit" disabled={saving}
-                    className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-[#274760] text-white text-sm font-bold py-2.5 hover:bg-[#1e364a] disabled:opacity-60 transition-all">
+                    className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-[#274760] text-white text-sm font-bold py-2.5 hover:bg-[#1e364a] disabled:opacity-60 transition-all min-h-11">
                     {saving
-                        ? <><Spinner/> Saving…</>
+                        ? <><Spinner /> Saving…</>
                         : <><FiSave size={13} /> {isEdit ? "Update Prescription" : "Save Prescription"}</>
                     }
                 </button>
                 <button type="button" onClick={onCancel}
-                    className="px-4 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50 transition-colors">
+                    className="px-4 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50 transition-colors min-h-11 min-w-11 flex items-center justify-center">
                     <FiX size={14} />
                 </button>
             </div>
@@ -210,6 +216,7 @@ const PrescriptionForm = ({ appointmentId, existingPrescription, onSaved, onCanc
 };
 
 // ─── Prescription Card ────────────────────────────────────────────────────────
+
 const PrescriptionCard = ({ prescription, appointmentId, onEdited }) => {
     const [editing, setEditing] = useState(false);
     const [expanded, setExpanded] = useState(false);
@@ -233,26 +240,27 @@ const PrescriptionCard = ({ prescription, appointmentId, onEdited }) => {
     return (
         <div className="rounded-xl border border-slate-100 bg-slate-50 overflow-hidden">
 
-            {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3">
-                <div>
-                    <div className="flex items-center gap-2">
-                        <p className="text-sm font-bold text-slate-800">{prescription.diagnosis}</p>
+            {/* Header — wraps gracefully on narrow widths */}
+            <div className="flex items-start justify-between gap-2 px-4 py-3">
+                <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-bold text-slate-800 wrap-break-words">{prescription.diagnosis}</p>
                         {prescription.isDraft && (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 uppercase tracking-wide">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 uppercase tracking-wide whitespace-nowrap">
                                 Draft
                             </span>
                         )}
                     </div>
                     <p className="text-xs text-slate-400 mt-0.5">{formatDate(prescription.createdAt)}</p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 shrink-0">
                     <button onClick={() => setEditing(true)}
-                        className="inline-flex items-center gap-1 text-xs font-bold text-[#274760] hover:text-[#1e364a] border border-[#274760]/20 rounded-lg px-2.5 py-1.5 hover:bg-[#274760]/5 transition-all">
-                        <FiEdit2 size={11} /> Edit
+                        className="inline-flex items-center gap-1 text-xs font-bold text-[#274760] hover:text-[#1e364a] border border-[#274760]/20 rounded-lg px-2.5 py-1.5 hover:bg-[#274760]/5 transition-all min-h-8">
+                        <FiEdit2 size={11} />
+                        <span className="hidden xs:inline">Edit</span>
                     </button>
                     <button onClick={() => setExpanded(p => !p)}
-                        className="text-slate-400 hover:text-slate-600 transition-colors p-1">
+                        className="text-slate-400 hover:text-slate-600 transition-colors p-1.5 min-h-8 min-w-8 flex items-center justify-center">
                         {expanded ? <FiChevronUp size={15} /> : <FiChevronDown size={15} />}
                     </button>
                 </div>
@@ -266,13 +274,13 @@ const PrescriptionCard = ({ prescription, appointmentId, onEdited }) => {
                         <div className="space-y-1.5">
                             {prescription.medicines?.map((m, i) => (
                                 <div key={i} className="rounded-lg bg-white border border-slate-100 px-3 py-2">
-                                    <div className="flex items-center justify-between">
+                                    <div className="flex items-start justify-between gap-2 flex-wrap">
                                         <span className="text-sm font-bold text-slate-700">{m.name}</span>
-                                        <span className="text-xs font-semibold text-[#274760] bg-[#274760]/8 px-2 py-0.5 rounded-full">
+                                        <span className="text-xs font-semibold text-[#274760] bg-[#274760]/8 px-2 py-0.5 rounded-full whitespace-nowrap">
                                             {m.dosage}
                                         </span>
                                     </div>
-                                    <div className="flex items-center gap-3 mt-1">
+                                    <div className="flex items-center gap-3 mt-1 flex-wrap">
                                         <span className="text-xs text-slate-400">
                                             <FiClock size={10} className="inline mr-1" />{m.duration}
                                         </span>
@@ -296,9 +304,10 @@ const PrescriptionCard = ({ prescription, appointmentId, onEdited }) => {
         </div>
     );
 };
+
 // ─── Appointment Row ──────────────────────────────────────────────────────────
 
-const AppointmentRow = ({ appointment, onWritePrescription }) => {
+const AppointmentRow = ({ appointment }) => {
     const [expanded, setExpanded] = useState(false);
     const [prescription, setPrescription] = useState(null);
     const [loadingRx, setLoadingRx] = useState(false);
@@ -330,17 +339,22 @@ const AppointmentRow = ({ appointment, onWritePrescription }) => {
         <div className="rounded-xl border border-slate-100 overflow-hidden">
             {/* Row header */}
             <div
-                className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-slate-50 transition-colors"
+                className="flex items-center gap-3 px-3 sm:px-4 py-3 cursor-pointer hover:bg-slate-50 transition-colors"
                 onClick={handleExpand}
             >
                 <div className="w-8 h-8 rounded-lg bg-[#274760]/8 flex items-center justify-center shrink-0">
                     <ConsultIcon size={13} className="text-[#274760]" />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-sm font-bold text-slate-700">{formatDate(appointment.appointmentDate)}</span>
+                    {/* Date, time, and badge — wrap on narrow viewports */}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-sm font-bold text-slate-700 whitespace-nowrap">
+                            {formatDate(appointment.appointmentDate)}
+                        </span>
                         {appointment.timeSlot && (
-                            <span className="text-xs text-slate-400 font-medium">{appointment.timeSlot}</span>
+                            <span className="text-xs text-slate-400 font-medium whitespace-nowrap">
+                                {appointment.timeSlot}
+                            </span>
                         )}
                         <StatusBadge status={appointment.status} />
                     </div>
@@ -348,14 +362,14 @@ const AppointmentRow = ({ appointment, onWritePrescription }) => {
                         <p className="text-xs text-slate-400 mt-0.5 truncate">{appointment.reasonForVisit}</p>
                     )}
                 </div>
-                <span className="text-slate-300 shrink-0">
+                <span className="text-slate-300 shrink-0 ml-1">
                     {expanded ? <FiChevronUp size={15} /> : <FiChevronDown size={15} />}
                 </span>
             </div>
 
             {/* Expanded */}
             {expanded && (
-                <div className="border-t border-slate-100 px-4 py-3 space-y-3">
+                <div className="border-t border-slate-100 px-3 sm:px-4 py-3 space-y-3">
                     {appointment.reasonForVisit && (
                         <div>
                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Reason</p>
@@ -372,12 +386,12 @@ const AppointmentRow = ({ appointment, onWritePrescription }) => {
                     {/* Prescription section */}
                     {canWritePrescription && (
                         <div>
-                            <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center justify-between mb-2 gap-2">
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Prescription</p>
                                 {!loadingRx && !prescription && !showForm && (
                                     <button
                                         onClick={(e) => { e.stopPropagation(); setShowForm(true); }}
-                                        className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 hover:text-emerald-700 border border-emerald-200 rounded-lg px-2.5 py-1.5 hover:bg-emerald-50 transition-all">
+                                        className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 hover:text-emerald-700 border border-emerald-200 rounded-lg px-2.5 py-1.5 hover:bg-emerald-50 transition-all whitespace-nowrap min-h-8">
                                         <FiPlus size={11} /> Write
                                     </button>
                                 )}
@@ -385,8 +399,7 @@ const AppointmentRow = ({ appointment, onWritePrescription }) => {
 
                             {loadingRx && (
                                 <div className="flex items-center gap-2 text-xs text-slate-400 py-2">
-                                <Spinner/>
-                                 Loading…
+                                    <Spinner /> Loading…
                                 </div>
                             )}
 
@@ -425,11 +438,11 @@ const AppointmentRow = ({ appointment, onWritePrescription }) => {
 const DoctorPatientProfile = () => {
     const { patientId } = useParams();
     const navigate = useNavigate();
-    const {openLightbox} = useLightbox()
+    const { openLightbox } = useLightbox();
 
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState("");
-    const [patient, setPatient] = useState(null);
+    const [loading, setLoading]           = useState(true);
+    const [error, setError]               = useState("");
+    const [patient, setPatient]           = useState(null);
     const [appointments, setAppointments] = useState([]);
     const [loadingAppts, setLoadingAppts] = useState(false);
 
@@ -485,51 +498,81 @@ const DoctorPatientProfile = () => {
 
     // ── Data ─────────────────────────────────────────────────────────────────
 
-    const name = patient?.user?.username || "Patient";
-    const email = patient?.user?.email || "";
-    const phone = patient?.phoneNumber || "";
-    const gender = patient?.personalInfo?.gender;
-    const dob = patient?.personalInfo?.dob;
-    const age = calcAge(dob);
-    const city = patient?.personalInfo?.address?.city;
-    const street = patient?.personalInfo?.address?.street;
+    const name         = patient?.user?.username || "Patient";
+    const email        = patient?.user?.email || "";
+    const phone        = patient?.phoneNumber || "";
+    const gender       = patient?.personalInfo?.gender;
+    const dob          = patient?.personalInfo?.dob;
+    const age          = calcAge(dob);
+    const city         = patient?.personalInfo?.address?.city;
+    const street       = patient?.personalInfo?.address?.street;
     const profileImage = patient?.personalInfo?.profileImage;
-    const bloodGroup = patient?.medicalInfo?.bloodGroup;
-    const allergies = patient?.medicalInfo?.allergies || [];
+    const bloodGroup   = patient?.medicalInfo?.bloodGroup;
+    const allergies    = patient?.medicalInfo?.allergies || [];
     const chronicDiseases = patient?.medicalInfo?.chronicDiseases || [];
-    const medications = patient?.medicalInfo?.medications || [];
+    const medications  = patient?.medicalInfo?.medications || [];
     const medicalNotes = patient?.medicalInfo?.medicalNotes;
-    const emergency = patient?.emergencyInfo;
+    const emergency    = patient?.emergencyInfo;
 
     const initials = getInitials(name);
 
     return (
-        <div className="max-w-5xl mx-auto px-4 py-6 space-y-4">
+        <div className="max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4">
 
             {/* Back */}
             <button onClick={() => navigate(-1)}
-                className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-[#274760] transition-colors">
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-[#274760] transition-colors min-h-9">
                 <FiArrowLeft size={15} /> Back
             </button>
 
             {/* ══════════════════════════════════════════
-          HERO CARD
-      ══════════════════════════════════════════ */}
+                HERO CARD
+            ══════════════════════════════════════════ */}
             <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
                 <div className="h-1.5 bg-linear-to-r from-[#274760] to-[#3a7ca5]" />
-                <div className="p-6 flex flex-col sm:flex-row gap-5">
+                <div className="p-4 sm:p-6 flex flex-col sm:flex-row gap-4 sm:gap-5">
 
-                    {/* Avatar */}
-                    <div className="w-20 h-20 rounded-2xl shrink-0 overflow-hidden bg-[#274760]/8 border border-slate-100">
-                        {profileImage
-                            ? <img src={profileImage} onClick={()=> profileImage && openLightbox(profileImage)} alt={name} className="w-full h-full object-cover object-top" />
-                            : <div className="w-full h-full flex items-center justify-center text-[#274760] font-bold text-2xl">{initials}</div>
-                        }
+                    {/* Avatar + name row on mobile */}
+                    <div className="flex items-center gap-4 sm:contents">
+                        {/* Avatar */}
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl shrink-0 overflow-hidden bg-[#274760]/8 border border-slate-100">
+                            {profileImage
+                                ? <img
+                                    src={profileImage}
+                                    onClick={() => profileImage && openLightbox(profileImage)}
+                                    alt={name}
+                                    className="w-full h-full object-cover object-top cursor-pointer"
+                                  />
+                                : <div className="w-full h-full flex items-center justify-center text-[#274760] font-bold text-xl sm:text-2xl">
+                                    {initials}
+                                  </div>
+                            }
+                        </div>
+
+                        {/* Name visible beside avatar on mobile */}
+                        <div className="sm:hidden min-w-0">
+                            <div className="flex flex-wrap items-center gap-2 mb-0.5">
+                                <h1 className="text-xl font-bold text-slate-800 leading-tight">{name}</h1>
+                            </div>
+                            <div className="flex flex-wrap gap-1.5 mt-1">
+                                {gender && (
+                                    <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-xs font-bold capitalize">
+                                        {gender}
+                                    </span>
+                                )}
+                                {bloodGroup && (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-100 text-xs font-bold">
+                                        <FiDroplet size={9} /> {bloodGroup}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
                     </div>
 
-                    {/* Name + meta */}
+                    {/* Name + meta (desktop) */}
                     <div className="flex-1 min-w-0">
-                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                        {/* Hidden on mobile (shown above) */}
+                        <div className="hidden sm:flex flex-wrap items-center gap-2 mb-1">
                             <h1 className="text-2xl font-bold text-slate-800">{name}</h1>
                             {gender && (
                                 <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-500 text-xs font-bold capitalize">
@@ -542,9 +585,10 @@ const DoctorPatientProfile = () => {
                                 </span>
                             )}
                         </div>
+
                         {email && <p className="text-sm text-slate-400">{email}</p>}
 
-                        {/* Stat chips */}
+                        {/* Stat chips — scroll horizontally on very small screens */}
                         <div className="flex flex-wrap gap-2 mt-3">
                             {age != null && (
                                 <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-100 rounded-xl px-3 py-2">
@@ -585,33 +629,36 @@ const DoctorPatientProfile = () => {
                         </div>
                     </div>
 
-                    {/* Refresh */}
-                    <button
-                        onClick={() => { loadPatient(); loadAppointments(); }}
-                        className="shrink-0 self-start inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-500 text-sm font-medium hover:bg-slate-50 transition-colors">
-                        <FiRefreshCw size={13} /> Refresh
-                    </button>
+                    {/* Refresh — full width on mobile, auto on sm+ */}
+                    <div className="flex sm:block">
+                        <button
+                            onClick={() => { loadPatient(); loadAppointments(); }}
+                            className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-500 text-sm font-medium hover:bg-slate-50 transition-colors min-h-10">
+                            <FiRefreshCw size={13} /> Refresh
+                        </button>
+                    </div>
                 </div>
             </div>
 
             {/* ══════════════════════════════════════════
-          BODY GRID
-      ══════════════════════════════════════════ */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                BODY GRID
+                - 1 col on mobile
+                - 2 col on md (left sidebar | appointment history)
+                - 3 col on lg (1 sidebar | 2 history)
+            ══════════════════════════════════════════ */}
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-4">
 
                 {/* ── Left column: Medical + Emergency ── */}
-                <div className="space-y-4">
+                <div className="md:col-span-1 space-y-4">
 
                     {/* Medical Info */}
                     <SectionCard icon={FiActivity} title="Medical Info" accent="bg-rose-400">
                         <div className="space-y-3">
-                            {/* Blood group */}
                             <InfoRow label="Blood Group" value={bloodGroup} />
                             <InfoRow label="DOB" value={formatDate(dob)} />
                             <InfoRow label="Phone" value={phone} />
                             {street && <InfoRow label="Address" value={`${street}${city ? ", " + city : ""}`} />}
 
-                            {/* Allergies */}
                             {allergies.length > 0 && (
                                 <div className="pt-1">
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Allergies</p>
@@ -623,7 +670,6 @@ const DoctorPatientProfile = () => {
                                 </div>
                             )}
 
-                            {/* Chronic diseases */}
                             {chronicDiseases.length > 0 && (
                                 <div className="pt-1">
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Chronic Diseases</p>
@@ -635,7 +681,6 @@ const DoctorPatientProfile = () => {
                                 </div>
                             )}
 
-                            {/* Medications */}
                             {medications.length > 0 && (
                                 <div className="pt-1">
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Current Medications</p>
@@ -647,7 +692,6 @@ const DoctorPatientProfile = () => {
                                 </div>
                             )}
 
-                            {/* Medical notes */}
                             {medicalNotes && (
                                 <div className="pt-1">
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Medical Notes</p>
@@ -657,7 +701,6 @@ const DoctorPatientProfile = () => {
                                 </div>
                             )}
 
-                            {/* Empty state */}
                             {!bloodGroup && allergies.length === 0 && chronicDiseases.length === 0 && medications.length === 0 && !medicalNotes && (
                                 <p className="text-xs text-slate-400 italic text-center py-2">No medical information on record.</p>
                             )}
@@ -675,21 +718,20 @@ const DoctorPatientProfile = () => {
                 </div>
 
                 {/* ── Right column: Appointment History ── */}
-                <div className="lg:col-span-2">
+                <div className="md:col-span-2">
                     <SectionCard
                         icon={FiCalendar}
                         title="Appointment History"
                         accent="bg-[#274760]"
                         action={
-                            <span className="text-xs font-bold text-[#274760] bg-[#274760]/8 px-2.5 py-1 rounded-full">
+                            <span className="text-xs font-bold text-[#274760] bg-[#274760]/8 px-2.5 py-1 rounded-full whitespace-nowrap">
                                 {appointments.length} total
                             </span>
                         }
                     >
                         {loadingAppts ? (
                             <div className="flex items-center justify-center gap-2 py-8 text-sm text-slate-400">
-                                <Spinner/>
-                                Loading appointments…
+                                <Spinner /> Loading appointments…
                             </div>
                         ) : appointments.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-10 gap-2 text-center">

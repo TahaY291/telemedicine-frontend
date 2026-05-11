@@ -16,8 +16,8 @@ const pad2 = (n) => String(n).padStart(2, "0");
 
 const to12h = (h, m) => {
   const ampm = h >= 12 ? "PM" : "AM";
-  const hh   = ((h + 11) % 12) + 1;          // 1-12, no leading zero
-  return `${hh}:${pad2(m)} ${ampm}`;          // e.g. "9:00 AM", "12:30 PM"
+  const hh   = ((h + 11) % 12) + 1;
+  return `${hh}:${pad2(m)} ${ampm}`;
 };
 
 const parseHHMM = (s) => {
@@ -43,21 +43,16 @@ const buildTimeSlots = (startTime, endTime, stepMinutes = 30) => {
   return slots;
 };
 
-
 const normalizeTimePart = (part) => {
   const trimmed = part.trim();
   const match   = trimmed.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
-  if (!match) return trimmed.toLowerCase(); // fallback: lowercase compare
-  const h    = Number(match[1]);            // strips any leading zero
+  if (!match) return trimmed.toLowerCase();
+  const h    = Number(match[1]);
   const m    = Number(match[2]);
   const ampm = match[3].toUpperCase();
-  return `${h}:${pad2(m)} ${ampm}`;        // "9:00 AM" — matches to12h output
+  return `${h}:${pad2(m)} ${ampm}`;
 };
 
-/**
- * Normalize a full slot label "HH:MM XM - HH:MM XM" so both sides
- * of the comparison are in the same canonical form.
- */
 const normalizeSlot = (slotLabel) => {
   const parts = String(slotLabel || "").split(" - ");
   if (parts.length !== 2) return slotLabel.trim().toLowerCase();
@@ -70,7 +65,6 @@ const weekdayName = (dateStr) => {
   return Number.isNaN(d.getTime()) ? "" : d.toLocaleDateString(undefined, { weekday: "long" });
 };
 
-/** Returns true if the slot's START time is still in the future. */
 const isSlotInFuture = (slotLabel) => {
   const startPart = slotLabel.split(" - ")[0]?.trim();
   if (!startPart) return true;
@@ -89,6 +83,7 @@ const isSlotInFuture = (slotLabel) => {
 const DAYS_ORDER = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const DAY_SHORT  = { Monday: "Mon", Tuesday: "Tue", Wednesday: "Wed", Thursday: "Thu", Friday: "Fri", Saturday: "Sat", Sunday: "Sun" };
 
+// ─── Responsive input class ───────────────────────────────────────────────────
 const inputCls = "w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#274760]/20 focus:border-[#274760] transition-all";
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
@@ -96,7 +91,7 @@ const inputCls = "w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-whi
 const PatientDoctorDetail = () => {
   const { doctorId } = useParams();
   const navigate     = useNavigate();
-  const {openLightbox} = useLightbox()
+  const { openLightbox } = useLightbox();
 
   const [loading,    setLoading]    = useState(true);
   const [error,      setError]      = useState("");
@@ -108,20 +103,10 @@ const PatientDoctorDetail = () => {
   const [timeSlot,        setTimeSlot]        = useState("");
   const [reasonForVisit,  setReasonForVisit]  = useState("");
 
-
-  /**
-   * bookedSlots — raw strings from the API, normalized before comparison.
-   * slotsReady  — true only after the API call for the CURRENT date resolves.
-   *               Prevents the brief window where old bookedSlots from the
-   *               previous date are still in state while the new fetch is
-   *               in-flight (Issue #3).
-   */
   const [bookedSlots,  setBookedSlots]  = useState([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [slotsReady,   setSlotsReady]   = useState(false);
 
-  // Track the date for which bookedSlots was last fetched so we never
-  // render slots from a stale fetch (race-condition guard).
   const fetchedForDate = useRef("");
 
   // ── Load doctor profile ──────────────────────────────────────────────────
@@ -143,34 +128,24 @@ const PatientDoctorDetail = () => {
   // ── Fetch booked slots ───────────────────────────────────────────────────
   const fetchBookedSlots = useCallback(async (date) => {
     if (!date || !doctorId) return;
-
-    // Mark that slots are not ready for this new date yet (Issue #3 fix)
     setSlotsReady(false);
     setLoadingSlots(true);
-    setBookedSlots([]);          // clear stale data immediately
+    setBookedSlots([]);
     fetchedForDate.current = date;
-
     try {
       const { data } = await api.get("/appointments/booked-slots", {
         params: { doctorId, date },
       });
-
       if (fetchedForDate.current !== date) return;
-
       const raw = data?.data || [];
-
       const normalized = raw.map(normalizeSlot);
       setBookedSlots(normalized);
-
     } catch {
-
-      if (fetchedForDate.current === date) {
-        setBookedSlots([]);   // explicit, documents the intent
-      }
+      if (fetchedForDate.current === date) setBookedSlots([]);
     } finally {
       if (fetchedForDate.current === date) {
         setLoadingSlots(false);
-        setSlotsReady(true);  // gate opens only for the matching fetch
+        setSlotsReady(true);
       }
     }
   }, [doctorId]);
@@ -185,26 +160,17 @@ const PatientDoctorDetail = () => {
 
   const isToday = appointmentDate === minDate;
 
-
   const availableSlotsForDate = useMemo(() => {
-    // Issue #3 fix — don't compute until the fetch for THIS date resolved
     if (!selectedDay || !doctor?.availabilitySlots || !slotsReady) return [];
-
     const daySlot = doctor.availabilitySlots.find(s => s?.day === selectedDay);
     if (!daySlot?.isAvailable) return [];
-
-    // Step 1
     let slots = buildTimeSlots(daySlot.startTime, daySlot.endTime, 30);
-
-    // Step 2
     if (isToday) slots = slots.filter(isSlotInFuture);
-
     slots = slots.filter(s => !bookedSlots.includes(normalizeSlot(s)));
-
     return slots;
   }, [doctor?.availabilitySlots, selectedDay, isToday, bookedSlots, slotsReady]);
 
-useEffect(() => {
+  useEffect(() => {
     setTimeSlot("");
     setSlotsReady(false);
     setBookedSlots([]);
@@ -219,26 +185,22 @@ useEffect(() => {
     setError("");
     setSuccess("");
     try {
-        // ← FIX: append noon time so UTC conversion never rolls back to yesterday
-        // "2026-05-08" + "T12:00:00" = 2026-05-08T12:00:00 local time
-        // Even after UTC conversion (UTC+5 → UTC-5) it stays on the same date
-        const safeDateString = `${appointmentDate}T12:00:00`;
-
-        const { data } = await api.post("/appointments/create-appointment", {
-            doctorId,
-            appointmentDate: safeDateString,  // ← FIXED
-            timeSlot,
-            consultationType: "video",
-            reasonForVisit,
-        });
-        setSuccess(data?.message || "Appointment request sent!");
-        navigate("/patient/appointments?status=pending", { replace: false });
+      const safeDateString = `${appointmentDate}T12:00:00`;
+      const { data } = await api.post("/appointments/create-appointment", {
+        doctorId,
+        appointmentDate: safeDateString,
+        timeSlot,
+        consultationType: "video",
+        reasonForVisit,
+      });
+      setSuccess(data?.message || "Appointment request sent!");
+      navigate("/patient/appointments?status=pending", { replace: false });
     } catch (err) {
-        setError(err?.response?.data?.message || "Failed to request appointment.");
+      setError(err?.response?.data?.message || "Failed to request appointment.");
     } finally {
-        setSubmitting(false);
+      setSubmitting(false);
     }
-};
+  };
 
   // ── Loading / error guards ───────────────────────────────────────────────
   if (loading) return (
@@ -274,9 +236,9 @@ useEffect(() => {
     : false;
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6 space-y-4">
+    <div className="max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4">
 
-      {/* Back */}
+      {/* ── Back button ─────────────────────────────────────────────────── */}
       <button
         onClick={() => navigate(-1)}
         className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-[#274760] transition-colors"
@@ -284,65 +246,91 @@ useEffect(() => {
         <FiArrowLeft size={15} /> Back to doctors
       </button>
 
+      {/* ── Doctor profile card ──────────────────────────────────────────── */}
       <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
         <div className="h-1.5 bg-linear-to-r from-[#274760] to-[#3a7ca5]" />
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
 
-          <div className="flex flex-col sm:flex-row gap-5">
-            {/* Avatar */}
-            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl shrink-0 overflow-hidden bg-[#274760]/8 border border-slate-100">
+          {/* Avatar + name row */}
+          <div className="flex flex-col xs:flex-row gap-4 sm:gap-5">
+
+            {/* Avatar — slightly smaller on mobile */}
+            <div className="w-20 h-20 xs:w-24 xs:h-24 sm:w-28 sm:h-28 rounded-2xl shrink-0 overflow-hidden bg-[#274760]/8 border border-slate-100 self-start">
               {doctorImage
-                ? <img src={doctorImage} onClick={()=> doctorImage && openLightbox(doctorImage)} alt={name} className="w-full h-full object-cover object-top" />
-                : <div className="w-full h-full flex items-center justify-center text-[#274760] font-bold text-2xl">{initials}</div>
+                ? (
+                  <img
+                    src={doctorImage}
+                    onClick={() => doctorImage && openLightbox(doctorImage)}
+                    alt={name}
+                    className="w-full h-full object-cover object-top cursor-pointer"
+                  />
+                )
+                : (
+                  <div className="w-full h-full flex items-center justify-center text-[#274760] font-bold text-2xl">
+                    {initials}
+                  </div>
+                )
               }
             </div>
 
             {/* Name + quals + stat tiles */}
             <div className="flex-1 min-w-0">
+
+              {/* Name + specialization badge */}
               <div className="flex flex-wrap items-center gap-2 mb-1">
-                <h1 className="text-2xl font-bold text-slate-800 leading-tight">{name}</h1>
+                <h1 className="text-xl sm:text-2xl font-bold text-slate-800 leading-tight wrap-break-words">
+                  {name}
+                </h1>
                 {specialization && (
                   <span className="px-3 py-0.5 rounded-full bg-[#274760] text-white text-xs font-bold shrink-0">
                     {specialization}
                   </span>
                 )}
               </div>
+
               {qualifications && (
-                <p className="text-sm text-slate-500 mb-4">{qualifications}</p>
+                <p className="text-sm text-slate-500 mb-3 sm:mb-4 leading-relaxed">{qualifications}</p>
               )}
 
+              {/* Stat tiles — wrap gracefully on small screens */}
               <div className="flex flex-wrap gap-2">
+
                 {experience != null && (
-                  <div className="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-xl px-3 py-2">
-                    <FiClock size={13} className="text-[#274760]" />
-                    <div>
+                  <div className="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 min-w-0">
+                    <FiClock size={13} className="text-[#274760] shrink-0" />
+                    <div className="min-w-0">
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Experience</p>
                       <p className="text-sm font-bold text-slate-700 mt-0.5">{experience} yrs</p>
                     </div>
                   </div>
                 )}
+
                 {fee != null && (
-                  <div className="flex items-center gap-2 bg-[#274760] rounded-xl px-3 py-2">
-                    <FiDollarSign size={13} className="text-white/70" />
-                    <div>
+                  <div className="flex items-center gap-2 bg-[#274760] rounded-xl px-3 py-2 min-w-0">
+                    <FiDollarSign size={13} className="text-white/70 shrink-0" />
+                    <div className="min-w-0">
                       <p className="text-[10px] font-bold text-white/60 uppercase tracking-widest leading-none">Fee</p>
                       <p className="text-sm font-bold text-white mt-0.5">Rs. {fee}</p>
                     </div>
                   </div>
                 )}
+
                 {(city || address) && (
-                  <div className="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-xl px-3 py-2">
-                    <FiMapPin size={13} className="text-[#274760]" />
-                    <div>
+                  <div className="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 min-w-0 max-w-55 sm:max-w-none">
+                    <FiMapPin size={13} className="text-[#274760] shrink-0" />
+                    <div className="min-w-0">
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Location</p>
-                      <p className="text-sm font-bold text-slate-700 mt-0.5">{[city, address].filter(Boolean).join(", ")}</p>
+                      <p className="text-sm font-bold text-slate-700 mt-0.5 truncate">
+                        {[city, address].filter(Boolean).join(", ")}
+                      </p>
                     </div>
                   </div>
                 )}
+
                 {availableDays.length > 0 && (
-                  <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2">
-                    <FiCalendar size={13} className="text-emerald-600" />
-                    <div>
+                  <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2 min-w-0">
+                    <FiCalendar size={13} className="text-emerald-600 shrink-0" />
+                    <div className="min-w-0">
                       <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest leading-none">Available</p>
                       <p className="text-sm font-bold text-emerald-700 mt-0.5">{availableDays.length} days/week</p>
                     </div>
@@ -352,35 +340,49 @@ useEffect(() => {
             </div>
           </div>
 
+          {/* ── Weekly schedule grid ──────────────────────────────────────── */}
           {availabilitySlots.length > 0 && (
-            <div className="mt-6 pt-5 border-t border-slate-100">
-              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">Weekly Schedule</p>
-              <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+            <div className="mt-5 pt-5 border-t border-slate-100">
+              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">
+                Weekly Schedule
+              </p>
+
+              {/*
+                Mobile  (<sm)  : 4 columns (Mon–Thu top row, Fri–Sun + gap bottom)
+                Tablet+ (sm+)  : 7 columns, all days in one row
+                Using grid-cols-4 then sm:grid-cols-7.
+                On very small screens this means the last 3 days wrap to a second
+                row — that's intentional and readable.
+              */}
+              <div className="grid grid-cols-4 sm:grid-cols-7 gap-1.5 sm:gap-2">
                 {DAYS_ORDER.map(day => {
                   const s    = availabilitySlots.find(sl => sl.day === day);
                   const open = s?.isAvailable;
                   const st   = s ? parseHHMM(s.startTime) : null;
                   const en   = s ? parseHHMM(s.endTime)   : null;
                   return (
-                    <div key={day} className={[
-                      "rounded-xl border p-2.5 text-center",
-                      open ? "border-emerald-100 bg-emerald-50/60" : "border-slate-100 bg-slate-50",
-                    ].join(" ")}>
+                    <div
+                      key={day}
+                      className={[
+                        "rounded-xl border p-2 text-center",
+                        open ? "border-emerald-100 bg-emerald-50/60" : "border-slate-100 bg-slate-50",
+                      ].join(" ")}
+                    >
                       <div className="flex items-center justify-center gap-1 mb-1">
                         {open
-                          ? <FiCheckCircle size={10} className="text-emerald-500" />
-                          : <FiXCircle     size={10} className="text-slate-300" />
+                          ? <FiCheckCircle size={9} className="text-emerald-500 shrink-0" />
+                          : <FiXCircle     size={9} className="text-slate-300 shrink-0" />
                         }
-                        <span className={`text-[11px] font-bold ${open ? "text-slate-700" : "text-slate-400"}`}>
+                        <span className={`text-[10px] sm:text-[11px] font-bold truncate ${open ? "text-slate-700" : "text-slate-400"}`}>
                           {DAY_SHORT[day]}
                         </span>
                       </div>
                       {open && st && en ? (
-                        <p className="text-[9px] font-semibold text-emerald-700 leading-snug">
+                        <p className="text-[8px] sm:text-[9px] font-semibold text-emerald-700 leading-snug">
                           {to12h(st.hh, st.mm)}<br />–<br />{to12h(en.hh, en.mm)}
                         </p>
                       ) : (
-                        <p className="text-[9px] text-slate-300">Closed</p>
+                        <p className="text-[8px] sm:text-[9px] text-slate-300">Closed</p>
                       )}
                     </div>
                   );
@@ -391,41 +393,48 @@ useEffect(() => {
         </div>
       </div>
 
-
-      
+      {/* ── Booking card ─────────────────────────────────────────────────── */}
       <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
         <div className="h-1 bg-linear-to-r from-[#274760] to-[#3a7ca5]" />
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
 
-          <div className="flex items-start justify-between gap-4 mb-6">
-            <div>
-              <h2 className="text-lg font-bold text-slate-800">Book an Appointment</h2>
-              <p className="text-sm text-slate-400 mt-0.5">
+          {/* Header row — stacks on mobile so fee badge doesn't crush the title */}
+          <div className="flex flex-col xs:flex-row xs:items-start xs:justify-between gap-3 mb-5 sm:mb-6">
+            <div className="min-w-0">
+              <h2 className="text-base sm:text-lg font-bold text-slate-800">Book an Appointment</h2>
+              <p className="text-sm text-slate-400 mt-0.5 leading-relaxed">
                 Request will be sent to Dr. {name.split(" ")[0]} for confirmation.
               </p>
             </div>
             {fee != null && (
-              <div className="shrink-0 text-right rounded-xl bg-[#274760]/5 border border-[#274760]/10 px-4 py-2.5">
+              <div className="shrink-0 xs:text-right rounded-xl bg-[#274760]/5 border border-[#274760]/10 px-4 py-2.5 self-start">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Fee</p>
                 <p className="text-xl font-bold text-[#274760] mt-0.5">Rs. {fee}</p>
               </div>
             )}
           </div>
 
+          {/* Status banners */}
           {success && (
             <div className="mb-5 flex items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 font-medium">
-              <FiCheck size={14} /> {success}
+              <FiCheck size={14} className="shrink-0" /> {success}
             </div>
           )}
           {error && <ErrorBanner error={error} />}
 
-          <form onSubmit={submitAppointment} className="space-y-6">
+          <form onSubmit={submitAppointment} className="space-y-5 sm:space-y-6">
 
-            {/* ── Step 1: Date & Time ───────────────────────────────── */}
+            {/* ── Step 1: Date & Time ───────────────────────────────────── */}
             <div>
               <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">
                 1 — Pick a Date &amp; Time
               </p>
+
+              {/*
+                Layout:
+                  Mobile  : stacked (date on top, slots below)
+                  Desktop : side-by-side grid
+              */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
                 {/* Date picker */}
@@ -438,7 +447,6 @@ useEffect(() => {
                     className={inputCls}
                     required
                   />
-                  {/* Hint — only shown once slots are confirmed for this date */}
                   {appointmentDate && slotsReady && (
                     <p className={`mt-1.5 text-xs font-semibold ${
                       availableSlotsForDate.length > 0 ? "text-emerald-600" : "text-red-500"
@@ -452,40 +460,47 @@ useEffect(() => {
                   )}
                 </div>
 
-                {/* ── Slot column — 3 clean mutually exclusive states ── */}
+                {/* Slot selector */}
                 <div>
                   {/* A: no date chosen */}
                   {!appointmentDate && (
-                    <div className="h-full min-h-11 flex items-center rounded-xl border border-slate-100 bg-slate-50 px-3.5 py-3 text-sm text-slate-400">
+                    <div className="flex items-center rounded-xl border border-slate-100 bg-slate-50 px-3.5 py-3 text-sm text-slate-400 h-full min-h-11">
                       Select a date first
                     </div>
                   )}
 
-                  {/* B: fetch in-flight — nothing clickable at all */}
+                  {/* B: loading */}
                   {appointmentDate && loadingSlots && (
-                    <div className="flex items-center justify-center gap-2 py-6 text-sm text-slate-400">
+                    <div className="flex items-center justify-center gap-2 py-5 text-sm text-slate-400">
                       <Spinner /> Checking availability…
                     </div>
                   )}
 
-                  {/* C: fetch done — render final filtered list */}
+                  {/* C: slots resolved */}
                   {appointmentDate && slotsReady && (
                     <>
                       {availableSlotsForDate.length === 0 ? (
-                        <div className="h-full min-h-11 flex items-center rounded-xl border border-red-100 bg-red-50 px-3.5 py-3 text-sm text-red-400">
+                        <div className="flex items-center rounded-xl border border-red-100 bg-red-50 px-3.5 py-3 text-sm text-red-400 min-h-11">
                           {doctorWorksOnSelectedDay
                             ? "All slots are fully booked for this day"
                             : "Doctor is not available on this day"}
                         </div>
                       ) : (
-                        <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-0.5">
+                        /*
+                          Slot grid:
+                            Mobile (<sm)  : 2 columns
+                            Tablet (sm+)  : 2 columns (same, fits well)
+                            Large  (lg+)  : 3 columns if many slots
+                          max-h keeps it scrollable if there are many slots
+                        */
+                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-1.5 sm:gap-2 max-h-52 overflow-y-auto pr-0.5">
                           {availableSlotsForDate.map(s => (
                             <button
                               key={s}
                               type="button"
                               onClick={() => setTimeSlot(s)}
                               className={[
-                                "py-2.5 rounded-xl border text-xs font-semibold transition-all",
+                                "py-2 sm:py-2.5 rounded-xl border text-[11px] sm:text-xs font-semibold transition-all",
                                 timeSlot === s
                                   ? "bg-[#274760] text-white border-[#274760] shadow-sm"
                                   : "border-slate-200 text-slate-600 hover:border-[#274760]/40 hover:bg-slate-50",
@@ -502,7 +517,7 @@ useEffect(() => {
               </div>
             </div>
 
-            {/* ── Step 2: Reason ──────────────────────────────────────── */}
+            {/* ── Step 2: Reason ───────────────────────────────────────── */}
             <div>
               <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">
                 2 — Reason for Visit
@@ -512,16 +527,54 @@ useEffect(() => {
                 onChange={e => setReasonForVisit(e.target.value)}
                 placeholder="Describe your symptoms or reason for the consultation…"
                 rows={3}
-                className={`${inputCls} resize-none`}
+                className={[
+                  inputCls,
+                  "resize-none",
+                  reasonForVisit.length > 0 && reasonForVisit.length < 10
+                    ? "border-red-300 focus:border-red-400 focus:ring-red-200"
+                    : "",
+                ].join(" ")}
                 required
+                minLength={10}
               />
+              {/* Live character counter + hint */}
+              <div className="mt-1.5 flex items-center justify-between gap-2">
+                {reasonForVisit.length > 0 && reasonForVisit.length < 10 ? (
+                  <p className="text-xs font-semibold text-red-500">
+                    Please enter at least {10 - reasonForVisit.length} more character{10 - reasonForVisit.length !== 1 ? "s" : ""}
+                  </p>
+                ) : reasonForVisit.length >= 10 ? (
+                  <p className="text-xs font-semibold text-emerald-600 flex items-center gap-1">
+                    <FiCheck size={11} /> Looks good
+                  </p>
+                ) : (
+                  <p className="text-xs text-slate-400">Minimum 10 characters required</p>
+                )}
+                <span className={`text-xs font-semibold tabular-nums shrink-0 ${
+                  reasonForVisit.length < 10 && reasonForVisit.length > 0
+                    ? "text-red-400"
+                    : reasonForVisit.length >= 10
+                    ? "text-emerald-500"
+                    : "text-slate-300"
+                }`}>
+                  {reasonForVisit.length}/10
+                </span>
+              </div>
             </div>
+
+            {/* Selected slot confirmation pill — helpful on mobile */}
+            {timeSlot && (
+              <div className="flex items-center gap-2 rounded-xl bg-[#274760]/5 border border-[#274760]/10 px-4 py-2.5 text-sm text-[#274760] font-semibold">
+                <FiCheck size={13} className="shrink-0" />
+                <span className="truncate">Slot: {timeSlot}</span>
+              </div>
+            )}
 
             {/* Submit */}
             <button
               type="submit"
-              disabled={submitting || !timeSlot}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#274760] text-white text-sm font-bold py-3.5 hover:bg-[#1e364a] disabled:opacity-60 active:scale-[0.98] transition-all shadow-sm shadow-[#274760]/20"
+              disabled={submitting || !timeSlot || reasonForVisit.length < 10}
+              className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#274760] text-white text-sm font-bold py-3 sm:py-3.5 hover:bg-[#1e364a] disabled:opacity-60 active:scale-[0.98] transition-all shadow-sm shadow-[#274760]/20"
             >
               {submitting
                 ? <><Spinner /> Sending request…</>

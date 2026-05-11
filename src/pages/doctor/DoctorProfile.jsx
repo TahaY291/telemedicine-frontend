@@ -231,7 +231,7 @@ const DoctorProfile = () => {
 
   if (loading) {
     return (
-      <div className="rounded-2xl border border-slate-200 bg-white p-10 flex flex-col items-center justify-center gap-3">
+      <div className="rounded-2xl border border-slate-200 bg-white p-10 max-sm:p-0 flex flex-col items-center justify-center gap-3">
         <p className="text-sm text-slate-500 font-medium">Loading profile…</p>
         <DoctorProfileSkeleton/>
       </div>
@@ -241,7 +241,7 @@ const DoctorProfile = () => {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6">
+    <div className="max-w-5xl mx-auto px-4 py-6 max-sm:px-0">
 
           <RefreshBanner
           tabName={"Doctor Profile"}

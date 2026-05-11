@@ -147,7 +147,7 @@ const Doctors = () => {
 
       {/* ── Hero Banner ── */}
       {!isLoggedIn && (
-        <section className="max-w-8xl mx-auto px-6 md:px-16 lg:px-24
+        <section className="max-w-8xl mx-auto  md:px-16 lg:px-24
                             flex flex-col lg:flex-row items-center justify-between
                             hero-bg-clr min-h-[55vh] pt-24 pb-10 lg:pb-0">
           <div className="w-full lg:basis-[50%] text-center lg:text-left">
@@ -187,143 +187,197 @@ const Doctors = () => {
       )}
 
       {/* ── Filters bar ── */}
-      <div className="max-w-6xl mx-auto px-6">
-        <div className={`relative z-10 bg-white rounded-2xl shadow-md border border-slate-100
-                        px-5 py-4 ${!isLoggedIn ? "-mt-5" : "mt-6"}`}>
+{/* ── Filters bar ── */}
+<div className="max-w-6xl mx-auto md:px-6">
+  <div
+    className={`relative z-10 bg-white rounded-2xl shadow-md border border-slate-100
+    px-3 sm:px-5 py-4 ${!isLoggedIn ? "-mt-5" : "mt-4 sm:mt-6"}`}
+  >
 
-          {/* header row */}
-          <div className="flex items-center justify-between mb-3">
-            {isLoggedIn ? (
-              <div>
-                <h1 className="text-lg font-bold text-[#274760]">Find a Doctor</h1>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Filter by specialization, city, gender or availability.
-                </p>
-              </div>
-            ) : (
-              <p className="text-xs text-slate-500 font-semibold">Refine results</p>
-            )}
+    {/* header row */}
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+      {isLoggedIn ? (
+        <div>
+          <h1 className="text-base sm:text-lg font-bold text-[#274760]">
+            Find a Doctor
+          </h1>
 
-            {/* active filter badge */}
-            {hasActiveFilters && (
-              <span className="text-[10px] bg-[#274760]/10 text-[#274760] font-semibold px-2.5 py-1 rounded-full">
-                Filters active
-              </span>
-            )}
-          </div>
-
-          <form onSubmit={handleFilterSubmit} className="flex flex-col gap-3">
-
-            {/* Row 1 — search (logged-in) + specialization + city */}
-            <div className="flex flex-wrap gap-2 items-center">
-              {isLoggedIn && (
-                <div className="relative w-full sm:w-56">
-                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none"
-                    fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
-                  </svg>
-                  <input
-                    type="text"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Search name or specialty…"
-                    className="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-200 bg-slate-50
-                               text-xs text-slate-700 placeholder:text-slate-400 outline-none
-                               focus:border-[#274760]/40 transition-colors"
-                  />
-                </div>
-              )}
-
-              <select value={specialization} onChange={(e) => setSpecialization(e.target.value)}
-                className={`${selectCls} min-w-37.5`}>
-                <option value="">All specializations</option>
-                {uniqueSpecializations.map((s) => <option key={s} value={s}>{s}</option>)}
-              </select>
-
-              <select value={city} onChange={(e) => setCity(e.target.value)}
-                className={`${selectCls} min-w-30`}>
-                <option value="">All cities</option>
-                {uniqueCities.map((c) => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </div>
-
-            {/* Row 2 — gender + day + time */}
-            <div className="flex flex-wrap gap-2 items-center">
-
-              {/* Gender */}
-              <div className="flex gap-1">
-                {[
-                  { val: "",       label: "Any gender" },
-                  { val: "male",   label: "♂ Male" },
-                  { val: "female", label: "♀ Female" },
-                  { val: "other",  label: "Other" },
-                ].map(({ val, label }) => (
-                  <button
-                    key={val}
-                    type="button"
-                    onClick={() => setGender(val)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-colors
-                      ${gender === val
-                        ? "bg-[#274760] text-white border-[#274760]"
-                        : "bg-slate-50 text-slate-600 border-slate-200 hover:border-[#274760]/40"
-                      }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-
-              {/* Availability day */}
-              <select value={daySlot} onChange={(e) => { setDaySlot(e.target.value); setTimeSlot(""); }}
-                className={`${selectCls} min-w-32.5`}>
-                <option value="">Any day</option>
-                {DAYS.map((d) => <option key={d} value={d}>{d}</option>)}
-              </select>
-
-              {/* Time — only useful once a day is picked */}
-              <div className="relative">
-                <input
-                  type="time"
-                  value={timeSlot}
-                  onChange={(e) => setTimeSlot(e.target.value)}
-                  disabled={!daySlot}
-                  title={!daySlot ? "Pick a day first" : "Filter by preferred time"}
-                  className={`rounded-xl border px-3 py-2 text-xs outline-none transition-colors
-                    ${daySlot
-                      ? "border-slate-200 bg-slate-50 text-slate-700 focus:border-[#274760]/40 cursor-pointer"
-                      : "border-slate-100 bg-slate-50 text-slate-300 cursor-not-allowed"
-                    }`}
-                />
-                {!daySlot && (
-                  <span className="absolute -top-4 left-0 text-[9px] text-slate-400 whitespace-nowrap">
-                    Select a day first
-                  </span>
-                )}
-              </div>
-
-              {/* actions pushed to right */}
-              <div className="flex gap-2 ml-auto">
-                <button type="submit"
-                  className="rounded-xl bg-[#274760] text-white text-xs font-semibold
-                             px-5 py-2 hover:bg-[#1a3448] transition-colors">
-                  Apply
-                </button>
-                {hasActiveFilters && (
-                  <button type="button" onClick={handleClear}
-                    className="rounded-xl border border-slate-200 text-slate-500 text-xs
-                               font-semibold px-4 py-2 hover:bg-slate-50 transition-colors">
-                    Clear all
-                  </button>
-                )}
-              </div>
-            </div>
-
-          </form>
+          <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">
+            Filter by specialization, city, gender or availability.
+          </p>
         </div>
+      ) : (
+        <p className="text-xs text-slate-500 font-semibold">
+          Refine results
+        </p>
+      )}
+
+      {/* active filter badge */}
+      {hasActiveFilters && (
+        <span
+          className="w-fit text-[10px] bg-[#274760]/10 text-[#274760]
+          font-semibold px-2.5 py-1 rounded-full"
+        >
+          Filters active
+        </span>
+      )}
+    </div>
+
+    <form onSubmit={handleFilterSubmit} className="space-y-3">
+
+      {/* ── Search + specialization + city ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+
+        {/* Search */}
+        {isLoggedIn && (
+          <div className="relative sm:col-span-2 lg:col-span-1">
+            <svg
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              viewBox="0 0 24 24"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="M21 21l-4.35-4.35" />
+            </svg>
+
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search doctor..."
+              className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50
+              text-xs text-slate-700 placeholder:text-slate-400 outline-none
+              focus:border-[#274760]/40 transition-colors"
+            />
+          </div>
+        )}
+
+        {/* Specialization */}
+        <select
+          value={specialization}
+          onChange={(e) => setSpecialization(e.target.value)}
+          className={`${selectCls} w-full py-2.5`}
+        >
+          <option value="">All specializations</option>
+
+          {uniqueSpecializations.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </select>
+
+        {/* City */}
+        <select
+          value={city}
+          onChange={(e) => setCity(e.target.value)}
+          className={`${selectCls} w-full py-2.5`}
+        >
+          <option value="">All cities</option>
+
+          {uniqueCities.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
+
+        {/* Day */}
+        <select
+          value={daySlot}
+          onChange={(e) => {
+            setDaySlot(e.target.value);
+            setTimeSlot("");
+          }}
+          className={`${selectCls} w-full py-2.5`}
+        >
+          <option value="">Any day</option>
+
+          {DAYS.map((d) => (
+            <option key={d} value={d}>
+              {d}
+            </option>
+          ))}
+        </select>
       </div>
 
+      {/* ── Gender + time + actions ── */}
+      <div className="flex flex-col lg:flex-row gap-3 lg:items-center">
+
+        {/* Gender buttons */}
+        <div className="flex flex-wrap gap-2">
+          {[
+            { val: "male", label: "♂ Male" },
+            { val: "female", label: "♀ Female" },
+          ].map(({ val, label }) => (
+            <button
+              key={val}
+              type="button"
+              onClick={() => setGender(val)}
+              className={`px-3 py-2 rounded-xl text-xs font-semibold border transition-colors
+              ${gender === val
+                  ? "bg-[#274760] text-white border-[#274760]"
+                  : "bg-slate-50 text-slate-600 border-slate-200 hover:border-[#274760]/40"
+                }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Time input */}
+        <div className="relative w-full sm:w-52">
+          <input
+            type="time"
+            value={timeSlot}
+            onChange={(e) => setTimeSlot(e.target.value)}
+            disabled={!daySlot}
+            title={!daySlot ? "Pick a day first" : "Filter by preferred time"}
+            className={`w-full rounded-xl border px-3 py-2.5 text-xs outline-none transition-colors
+            ${daySlot
+                ? "border-slate-200 bg-slate-50 text-slate-700 focus:border-[#274760]/40 cursor-pointer"
+                : "border-slate-100 bg-slate-50 text-slate-300 cursor-not-allowed"
+              }`}
+          />
+
+          {!daySlot && (
+            <span className="absolute -top-4 left-0 text-[9px] text-slate-400 whitespace-nowrap">
+              Select a day first
+            </span>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div className="flex flex-col sm:flex-row gap-2 lg:ml-auto w-full sm:w-auto">
+          <button
+            type="submit"
+            className="w-full sm:w-auto rounded-xl bg-[#274760] text-white
+            text-xs font-semibold px-5 py-2.5 hover:bg-[#1a3448] transition-colors"
+          >
+            Apply Filters
+          </button>
+
+          {hasActiveFilters && (
+            <button
+              type="button"
+              onClick={handleClear}
+              className="w-full sm:w-auto rounded-xl border border-slate-200
+              text-slate-500 text-xs font-semibold px-4 py-2.5
+              hover:bg-slate-50 transition-colors"
+            >
+              Clear All
+            </button>
+          )}
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
       {/* ── Results area ── */}
-      <div className="max-w-6xl mx-auto px-6 py-10">
+      <div className="max-w-6xl mx-auto py-10">
 
         {!loading && !error && (
           <p className="text-xs text-slate-400 mb-6 font-medium">
@@ -399,7 +453,7 @@ const Doctors = () => {
       {/* ── CTA strip ── */}
       {!isLoggedIn && !loading && filtered.length > 0 && (
         <div className="bg-white border-t border-slate-100 py-10">
-          <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row
+          <div className="max-w-6xl mx-auto flex flex-col sm:flex-row
                           items-center justify-between gap-4">
             <div>
               <p className="text-sm font-bold text-[#274760]">Ready to book a consultation?</p>

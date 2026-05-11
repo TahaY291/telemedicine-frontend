@@ -27,7 +27,7 @@ const DashboardHero = ({ greeting, displayName, todayLabel, stats, initials , ro
                     </div>
                 </div>
 
-                <div className="mt-4 grid grid-cols-3 gap-3 text-xs">
+                <div className="mt-4 grid grid-cols-3 max-sm:grid-cols-2 gap-3 text-xs">
                     {[
                         { label: "Today", value: stats?.todayCount ?? "—" },
                         { label: "Pending", value: stats?.pendingCount ?? "—" },

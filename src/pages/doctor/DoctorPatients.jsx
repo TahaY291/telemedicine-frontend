@@ -41,7 +41,7 @@ const DoctorPatients = () => {
   });
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-6">
+    <div className="max-w-6xl mx-auto px-4 py-6 max-sm:px-0">
 
       {/* ── Header ── */}
 

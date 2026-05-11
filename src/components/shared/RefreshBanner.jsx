@@ -2,7 +2,7 @@ import { FiRefreshCw } from 'react-icons/fi'
 
 const RefreshBanner = ({ onClick, initialLoading, saving , tabName , text}) => {
     return (
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center flex-wrap justify-between mb-6">
             <div>
                 <h1 className="text-2xl font-bold text-slate-800 tracking-tight">{tabName}</h1>
                 <p className="text-sm text-slate-400 mt-0.5">{text}</p>

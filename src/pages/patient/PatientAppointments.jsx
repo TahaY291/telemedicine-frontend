@@ -68,18 +68,21 @@ const TabBtn = ({ tab, active, onClick, count }) => {
       type="button"
       onClick={onClick}
       className={[
-        "relative inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold",
+        // Base: tighter on mobile, normal on sm+
+        "relative inline-flex items-center gap-1 sm:gap-1.5",
+        "px-2.5 py-1.5 sm:px-3 sm:py-2",
+        "rounded-xl text-[11px] sm:text-xs font-bold",
         "border transition-all duration-150 whitespace-nowrap shrink-0",
         active
           ? "bg-[#274760] text-white border-[#274760] shadow-sm"
           : "bg-white text-slate-500 border-slate-200 hover:border-[#274760]/30 hover:text-[#274760] hover:bg-[#274760]/5",
       ].join(" ")}
     >
-      {icon}
+      <span className="shrink-0">{icon}</span>
       <span>{label}</span>
       {count > 0 && (
         <span className={[
-          "ml-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold leading-none",
+          "ml-0.5 px-1.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold leading-none",
           active ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500",
         ].join(" ")}>
           {count}
@@ -100,12 +103,23 @@ const SummaryStrip = ({ items }) => {
   if (!visible.length) return null;
 
   return (
-    <div className="flex flex-wrap gap-1.5">
+    // Horizontally scrollable on mobile, wraps on sm+
+    <div
+      className="flex gap-1.5 overflow-x-auto sm:flex-wrap sm:overflow-x-visible pb-0.5 sm:pb-0"
+      style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+    >
       {visible.map((s) => {
         const st = STATUS_STYLES[s] || {};
         return (
-          <span key={s}
-            className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded-lg border ${st.bg} ${st.text} ${st.border}`}>
+          <span
+            key={s}
+            className={`
+              inline-flex items-center gap-1 shrink-0
+              text-[10px] sm:text-[11px] font-semibold
+              px-2 py-1 rounded-lg border
+              ${st.bg} ${st.text} ${st.border}
+            `}
+          >
             <span className="capitalize">{s}</span>
             <span className="font-bold">{counts[s]}</span>
           </span>
@@ -116,15 +130,15 @@ const SummaryStrip = ({ items }) => {
 };
 
 const EmptyState = ({ status }) => (
-  <div className="rounded-2xl border border-slate-200 bg-white p-10 sm:p-14 flex flex-col items-center text-center gap-3">
-    <div className="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center">
-      <FiCalendar size={22} className="text-slate-300" />
+  <div className="rounded-2xl border border-slate-200 bg-white p-8 sm:p-10 md:p-14 flex flex-col items-center text-center gap-3">
+    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center">
+      <FiCalendar size={20} className="text-slate-300 sm:text-[22px]" />
     </div>
     <div>
       <p className="text-sm font-bold text-slate-700 mb-1">
         {status === "all" ? "No appointments yet" : `No ${status} appointments`}
       </p>
-      <p className="text-xs text-slate-400 max-w-xs mx-auto">
+      <p className="text-xs text-slate-400 max-w-[260px] sm:max-w-xs mx-auto leading-relaxed">
         {status === "pending"
           ? "Your appointment requests will show here once submitted."
           : status === "all"
@@ -148,7 +162,7 @@ const PatientAppointments = () => {
   const [tabCounts, setTabCounts]   = useState({});
   const [activeCall, setActiveCall] = useState(null);
   const [payingId, setPayingId]     = useState(null);
-  const [refreshKey, setRefreshKey] = useState(0); // ← ADDED
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // ── Fetch ────────────────────────────────────────────────────────────────
 
@@ -164,7 +178,7 @@ const PatientAppointments = () => {
         const results = await Promise.allSettled(
           STATUSES.map((s) =>
             api.get("/appointments/patient-appointments", {
-              params: { status: s, _t: Date.now() }, // ← CACHE BUST
+              params: { status: s, _t: Date.now() },
             })
           )
         );
@@ -179,7 +193,7 @@ const PatientAppointments = () => {
         setItems(sortByTime(merged));
       } else {
         const { data } = await api.get("/appointments/patient-appointments", {
-          params: { status: tab, _t: Date.now() }, // ← CACHE BUST
+          params: { status: tab, _t: Date.now() },
         });
         setItems(sortByTime(data?.data || []));
       }
@@ -190,7 +204,6 @@ const PatientAppointments = () => {
     }
   };
 
-  // ← FIXED: depends on both activeTab and refreshKey
   useEffect(() => { load(activeTab); }, [activeTab, refreshKey]); // eslint-disable-line
 
   // ── Actions ──────────────────────────────────────────────────────────────
@@ -264,20 +277,21 @@ const PatientAppointments = () => {
         />
       )}
 
-      <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4">
+      {/* Full-width on mobile, constrained + padded on larger screens */}
+      <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 md:px-6 py-3 sm:py-4 md:py-6 space-y-3 sm:space-y-4">
 
         {/* Banner */}
         <RefreshBanner
           tabName={"My Appointments"}
           text={"Track and manage your consultation requests"}
-          onClick={() => setRefreshKey((k) => k + 1)} // ← FIXED
+          onClick={() => setRefreshKey((k) => k + 1)}
           initialLoading={loading}
         />
 
         {/* ── Tab strip ── */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-2 shadow-sm">
+        <div className="bg-white border border-slate-200 rounded-2xl p-1.5 sm:p-2 shadow-sm">
           <div
-            className="flex gap-1.5 overflow-x-auto sm:flex-wrap sm:overflow-x-visible"
+            className="flex gap-1 sm:gap-1.5 overflow-x-auto sm:flex-wrap sm:overflow-x-visible"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
             {ALL_TABS.map((tab) => (
@@ -297,7 +311,7 @@ const PatientAppointments = () => {
 
         {/* ── Content ── */}
         {loading ? (
-          <div className="rounded-2xl border border-slate-200 bg-white p-10 flex items-center justify-center gap-3">
+          <div className="rounded-2xl border border-slate-200 bg-white p-8 sm:p-10 flex items-center justify-center gap-3">
             <Spinner />
             <p className="text-sm text-slate-500 font-medium">Loading appointments…</p>
           </div>
@@ -308,7 +322,8 @@ const PatientAppointments = () => {
         ) : (
           <div className="space-y-2">
 
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-1 mb-1">
+            {/* Meta row: stacks on mobile, side-by-side on sm+ */}
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between px-1 mb-1">
               {metaLabel && (
                 <p className="text-xs text-slate-400 font-semibold">{metaLabel}</p>
               )}
