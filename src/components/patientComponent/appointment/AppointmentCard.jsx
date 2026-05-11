@@ -49,6 +49,7 @@ export const AppointmentCard = ({
       : null;
 
   const isPaying = payingId === a._id;
+  console.log(a.doctor.userId.username)
 
   // ── Status accent color ──────────────────────────────────────────────────
   const accentClass =
