@@ -138,7 +138,7 @@ const EmptyState = ({ status }) => (
       <p className="text-sm font-bold text-slate-700 mb-1">
         {status === "all" ? "No appointments yet" : `No ${status} appointments`}
       </p>
-      <p className="text-xs text-slate-400 max-w-[260px] sm:max-w-xs mx-auto leading-relaxed">
+      <p className="text-xs text-slate-400 max-w-65 sm:max-w-xs mx-auto leading-relaxed">
         {status === "pending"
           ? "Your appointment requests will show here once submitted."
           : status === "all"
