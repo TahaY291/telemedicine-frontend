@@ -1,20 +1,10 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// appointmentUtils.js
-// Shared pure functions and hooks for DoctorAppointments & PatientAppointments.
-// ─────────────────────────────────────────────────────────────────────────────
 
 import { useMemo, useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import api from "../../api/axios.js";
 import { APPOINTMENT_STATUSES } from "./AppointmentConstants.jsx";
 
-// ── 1. Format a date value to "Apr 19, 2026" ─────────────────────────────────
-// Identical function existed in both files.
 
-
-// ── 2. Parse slot start datetime from appointmentDate + timeSlot string ───────
-// e.g. timeSlot = "02:00 PM - 02:30 PM" → returns a Date object for 14:00
-// Used in PatientAppointments; useful for any call-time logic.
 export const parseSlotStart = (appointmentDate, timeSlot) => {
   if (!appointmentDate || !timeSlot) return null;
   try {
@@ -30,8 +20,7 @@ export const parseSlotStart = (appointmentDate, timeSlot) => {
   }
 };
 
-// ── 3. Check if current time is within the call window ───────────────────────
-// Window = [slotStart - 15min, slotStart + 30min]
+
 export const isCallTimeActive = (appointmentDate, timeSlot) => {
   const slotStart = parseSlotStart(appointmentDate, timeSlot);
   if (!slotStart) return false;
@@ -42,11 +31,7 @@ export const isCallTimeActive = (appointmentDate, timeSlot) => {
   );
 };
 
-// ── 4. Derive initials from a full name ───────────────────────────────────────
-// e.g. "John Doe" → "JD"
 
-// ── 5. Read ?status= from the URL query string ────────────────────────────────
-// Used in PatientAppointments to pre-select a tab from URL params.
 export const useQueryStatus = (fallback = "pending") => {
   const { search } = useLocation();
   return useMemo(() => {
@@ -55,14 +40,7 @@ export const useQueryStatus = (fallback = "pending") => {
   }, [search, fallback]);
 };
 
-// ── 6. Shared appointment-fetching hook ───────────────────────────────────────
-// Handles: expire call, fetch by status, loading & error state.
-// `endpoint` — API path, e.g. "/appointments/doctor-appointments"
-//
-// Usage:
-//   const { items, loading, error, reload } = useAppointments(
-//     "/appointments/doctor-appointments", activeStatus
-//   );
+
 export const useAppointments = (endpoint, status) => {
   const [items, setItems]     = useState([]);
   const [loading, setLoading] = useState(true);
@@ -72,7 +50,7 @@ export const useAppointments = (endpoint, status) => {
     setLoading(true);
     setError("");
     try {
-      await api.post("/appointments/expire").catch(() => {}); // silent — best effort
+      await api.post("/appointments/expire").catch(() => {}); 
       const { data } = await api.get(endpoint, { params: { status } });
       setItems(data?.data || []);
     } catch (err) {
@@ -82,14 +60,12 @@ export const useAppointments = (endpoint, status) => {
     }
   };
 
-  useEffect(() => { load(); }, [status]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, [status]); 
 
   return { items, loading, error, setError, reload: load };
 };
 
-// ── 7. Minutes-until-call label ───────────────────────────────────────────────
-// Returns a human-readable string like "Doctor's call opens in 45 min"
-// or null if not within a 2-hour heads-up window.
+
 export const getCallSoonLabel = (appointmentDate, timeSlot) => {
   const slotStart = parseSlotStart(appointmentDate, timeSlot);
   if (!slotStart) return null;
